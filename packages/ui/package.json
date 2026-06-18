@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./styles.css": "./src/styles.css",
+    "./themes": "./src/themes.ts",
     "./*": "./src/*.tsx"
   },
   "scripts": {
@@ -17,6 +19,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:"
   },
   "dependencies": {

@@ -1,3 +1,7 @@
+@import "@repo/ui/styles.css";
+
+@source "../**/*.{ts,tsx}";
+
 :root {
   --background: #0f172a;
   --foreground: #f8fafc;

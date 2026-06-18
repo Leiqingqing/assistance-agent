@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@source "./**/*.{ts,tsx}";
+
+@theme {
+  --color-app-background: #ffffff;
+  --color-app-foreground: #171717;
+  --color-app-muted: #5f6673;
+  --color-app-border: rgba(23, 23, 23, 0.14);
+  --color-brand-primary: #2563eb;
+  --color-brand-secondary: #7c3aed;
+  --color-poetic-meadow-background: #fbfff2;
+  --color-poetic-meadow-foreground: #233019;
+  --color-poetic-meadow-card: #fffffb;
+  --color-poetic-meadow-primary: #7bae4f;
+  --color-poetic-meadow-accent: #f4c7d7;
+  --color-poetic-meadow-muted: #6c765d;
+  --color-poetic-meadow-border: #e2efcb;
+  --color-poetic-meadow-dark-background: #10170a;
+  --color-poetic-meadow-dark-foreground: #f7ffe8;
+  --color-poetic-meadow-dark-card: #1b2511;
+  --color-poetic-meadow-dark-primary: #b9d982;
+  --color-poetic-meadow-dark-accent: #f0afc8;
+  --color-poetic-meadow-dark-muted: #b2bd9d;
+  --color-poetic-meadow-dark-border: #354625;
+}
+
+.theme-poetic-meadow {
+  --background: #fbfff2;
+  --foreground: #233019;
+  --card: #fffffb;
+  --primary: #7bae4f;
+  --accent: #f4c7d7;
+  --muted: #6c765d;
+  --border: #e2efcb;
+}
+
+.theme-poetic-meadow.dark,
+.dark .theme-poetic-meadow {
+  --background: #10170a;
+  --foreground: #f7ffe8;
+  --card: #1b2511;
+  --primary: #b9d982;
+  --accent: #f0afc8;
+  --muted: #b2bd9d;
+  --border: #354625;
+}

@@ -1,4 +1,5 @@
 import { Button } from "@repo/ui/button";
+import { TailwindProof } from "@repo/ui/tailwind-proof";
 import styles from "./page.module.css";
 
 export default function AdminHome() {
@@ -18,6 +19,7 @@ export default function AdminHome() {
             Shared UI
           </Button>
         </div>
+        <TailwindProof appName="Admin App" tone="violet" />
       </section>
     </main>
   );

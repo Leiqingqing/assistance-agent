@@ -20,6 +20,8 @@ catalog:
   "prettier": "^3.7.4"
   "react": "^19.2.0"
   "react-dom": "^19.2.0"
+  "@tailwindcss/postcss": "^4.1.17"
+  "tailwindcss": "^4.1.17"
   "tsx": "^4.20.6"
   "turbo": "^2.9.6"
   "typescript": "5.9.2"
