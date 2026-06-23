@@ -3,6 +3,16 @@
 @source "./**/*.{ts,tsx}";
 
 @theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-app-background: #ffffff;
   --color-app-foreground: #171717;
   --color-app-muted: #5f6673;
@@ -25,14 +35,32 @@
   --color-poetic-meadow-dark-border: #354625;
 }
 
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+  --muted-foreground: #71717a;
+  --border: rgba(23, 23, 23, 0.14);
+  --input: rgba(23, 23, 23, 0.16);
+  --ring: #2563eb;
+}
+
 .theme-poetic-meadow {
   --background: #fbfff2;
   --foreground: #233019;
   --card: #fffffb;
+  --card-foreground: #233019;
   --primary: #7bae4f;
+  --primary-foreground: #fbfff2;
   --accent: #f4c7d7;
   --muted: #6c765d;
+  --muted-foreground: #6c765d;
   --border: #e2efcb;
+  --input: #d8e8bd;
+  --ring: #7bae4f;
 }
 
 .theme-poetic-meadow.dark,
@@ -40,8 +68,13 @@
   --background: #10170a;
   --foreground: #f7ffe8;
   --card: #1b2511;
+  --card-foreground: #f7ffe8;
   --primary: #b9d982;
+  --primary-foreground: #10170a;
   --accent: #f0afc8;
   --muted: #b2bd9d;
+  --muted-foreground: #b2bd9d;
   --border: #354625;
+  --input: #445931;
+  --ring: #b9d982;
 }

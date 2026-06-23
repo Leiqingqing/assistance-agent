@@ -1,8 +1,31 @@
 .page {
   min-height: 100svh;
   background:
-    radial-gradient(circle at top left, rgba(79, 180, 119, 0.2), transparent 34rem),
-    radial-gradient(circle at top right, rgba(184, 164, 246, 0.24), transparent 30rem),
-    radial-gradient(circle at 42% 0, rgba(244, 199, 215, 0.18), transparent 26rem),
-    #f8fff9;
+    radial-gradient(circle at top left, color-mix(in srgb, var(--primary) 22%, transparent), transparent 34rem),
+    radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent) 30%, transparent), transparent 34rem),
+    var(--background);
+}
+
+.eyebrow {
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+}
+
+.primaryCard {
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+}
+
+.secondaryCard {
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+.accentPanel {
+  background: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.listItem {
+  background: color-mix(in srgb, var(--background) 58%, transparent);
+}
+
+.statusBadge {
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
 }
