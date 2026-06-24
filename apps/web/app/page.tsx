@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@repo/ui/button";
 import {
   Card,
@@ -37,6 +38,9 @@ export default function Home() {
             <Button size="sm">主题主色</Button>
             <Button size="sm" variant="outline">
               响应式验证
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/tailwind-design">Token 方案</Link>
             </Button>
             <Button asChild size="sm" variant="secondary">
               <a href="#component-checklist">Slot asChild</a>
