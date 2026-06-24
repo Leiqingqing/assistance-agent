@@ -1,6 +1,6 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalEnv": ["PORT"],
+  "globalEnv": ["PORT", "API_BASE_URL"],
   "ui": "tui",
   "tasks": {
     "build": {

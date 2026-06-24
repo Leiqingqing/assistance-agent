@@ -1,4 +1,11 @@
 import Link from "next/link";
+import { hc } from "hono/client";
+import {
+  pingRequestSchema,
+  pingResponseSchema,
+  type PingRequest,
+  type PingResponse,
+} from "@repo/contracts";
 import { Button } from "@repo/ui/button";
 import {
   Card,
@@ -11,11 +18,64 @@ import {
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { Separator } from "@repo/ui/separator";
+import type { AppType } from "api/app";
 import styles from "./page.module.css";
 
 const components = ["Button", "Slot", "Label", "Input", "Card", "Separator"] as const;
+const apiBaseUrl =
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  "http://127.0.0.1:3002";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+
+interface PingCheck {
+  request: PingRequest;
+  response: PingResponse;
+}
+
+async function getPingCheck(): Promise<PingCheck> {
+  const client = hc<AppType>(apiBaseUrl);
+  const request = pingRequestSchema.parse({
+    nonce: crypto.randomUUID(),
+    sentAt: new Date().toISOString(),
+    source: "web-home",
+  });
+
+  try {
+    const response = await client.ping.$post({ json: request });
+    const body = await response.json();
+
+    return {
+      request,
+      response: pingResponseSchema.parse(body),
+    };
+  } catch (error) {
+    return {
+      request,
+      response: {
+        ok: false,
+        meta: {
+          requestId: "local",
+          timestamp: new Date().toISOString(),
+        },
+        error: {
+          code: "SYSTEM.UPSTREAM_TIMEOUT",
+          message: "Ping request failed",
+          details: {
+            reason:
+              error instanceof Error ? error.message : "Unknown ping error",
+          },
+        },
+      },
+    };
+  }
+}
+
+export default async function Home() {
+  const pingCheck = await getPingCheck();
+  const errorCode = pingCheck.response.ok ? "无" : pingCheck.response.error.code;
+
   return (
     <div className={`${styles.page} theme-poetic-meadow`}>
       <main className="mx-auto flex min-h-svh w-full max-w-6xl flex-col px-5 py-8 sm:px-8 lg:px-10">
@@ -102,6 +162,42 @@ export default function Home() {
                   <p className="mt-1 text-caption text-muted-foreground">
                     装饰渐变和辅助视觉层次
                   </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className={`${styles.secondaryCard} shadow-md backdrop-blur`}
+            >
+              <CardHeader>
+                <CardTitle>请求链路</CardTitle>
+                <CardDescription>
+                  首页通过 Hono RPC 调用 API `/ping`，并用 zod 校验输入和输出。
+                </CardDescription>
+              </CardHeader>
+              <Separator />
+              <CardContent className="grid gap-3 pt-6 text-body">
+                <div className="rounded-lg border border-border bg-background/60 p-3">
+                  <p className="mb-2 font-medium">请求体</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-caption text-muted-foreground">
+                    {JSON.stringify(pingCheck.request, null, 2)}
+                  </pre>
+                </div>
+                <div className="rounded-lg border border-border bg-background/60 p-3">
+                  <p className="mb-2 font-medium">返回值</p>
+                  <pre className="overflow-auto whitespace-pre-wrap text-caption text-muted-foreground">
+                    {JSON.stringify(pingCheck.response, null, 2)}
+                  </pre>
+                </div>
+                <div className="flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2">
+                  <span className="font-medium">错误码</span>
+                  <span
+                    className={`${styles.statusBadge} rounded-full px-2 py-0.5 text-caption ${
+                      pingCheck.response.ok ? "text-primary" : "text-destructive"
+                    }`}
+                  >
+                    {errorCode}
+                  </span>
                 </div>
               </CardContent>
             </Card>
