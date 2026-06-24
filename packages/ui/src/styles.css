@@ -16,6 +16,40 @@
   --color-brand-900: #4a3859;
   --color-brand-foreground: #2f2438;
 
+  /* Supporting scales: natural and emotional accents */
+  --color-meadow-50: #fbfff2;
+  --color-meadow-100: #f4f9df;
+  --color-meadow-200: #e6f0bd;
+  --color-meadow-300: #d4e590;
+  --color-meadow-400: #bed66b;
+  --color-meadow-500: #9ebc4f;
+  --color-meadow-600: #7d993c;
+  --color-meadow-700: #5f752f;
+  --color-meadow-800: #465724;
+  --color-meadow-900: #303b1a;
+
+  --color-blush-50: #fff8fa;
+  --color-blush-100: #fceef3;
+  --color-blush-200: #f6d6df;
+  --color-blush-300: #efb9c8;
+  --color-blush-400: #e592aa;
+  --color-blush-500: #d46d8d;
+  --color-blush-600: #b85273;
+  --color-blush-700: #933f5a;
+  --color-blush-800: #6d3145;
+  --color-blush-900: #4a2533;
+
+  --color-earth-50: #faf7f1;
+  --color-earth-100: #efe7d8;
+  --color-earth-200: #ddcdb3;
+  --color-earth-300: #c6ae88;
+  --color-earth-400: #a98c62;
+  --color-earth-500: #886b45;
+  --color-earth-600: #6b5338;
+  --color-earth-700: #51402f;
+  --color-earth-800: #3b3025;
+  --color-earth-900: #29221b;
+
   /* Surface: page, card, popover, and subtle containers */
   --color-surface-page: #fbfff2;
   --color-surface-card: #fffffb;
@@ -86,6 +120,14 @@
   --text-display--letter-spacing: -0.055em;
   --text-display--font-weight: 900;
 
+  /* Shadows: low-pressure elevation and tokenized focus treatments */
+  --shadow-xs: 0 1px 2px rgb(51 38 49 / 0.05);
+  --shadow-sm: 0 5px 15px rgb(51 38 49 / 0.07);
+  --shadow-md: 0 14px 34px rgb(51 38 49 / 0.1);
+  --shadow-lg: 0 26px 62px rgb(51 38 49 / 0.13);
+  --shadow-glow: 0 0 0 6px rgb(246 214 223 / 0.26);
+  --shadow-focus: 0 0 0 3px rgb(204 182 222 / 0.46);
+
   /* Compatibility aliases for existing components */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -109,47 +151,47 @@
 }
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #18181b;
-  --accent: #7c3aed;
-  --accent-foreground: #ffffff;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
-  --border: rgba(23, 23, 23, 0.14);
-  --input: rgba(23, 23, 23, 0.16);
-  --ring: #2563eb;
+  --background: var(--color-surface-page);
+  --foreground: var(--color-content-title);
+  --card: var(--color-surface-card);
+  --card-foreground: var(--color-content-title);
+  --popover: var(--color-surface-popover);
+  --popover-foreground: var(--color-content-title);
+  --primary: var(--color-brand-500);
+  --primary-foreground: var(--color-brand-foreground);
+  --secondary: var(--color-blush-200);
+  --secondary-foreground: var(--color-blush-900);
+  --accent: var(--color-meadow-200);
+  --accent-foreground: var(--color-meadow-900);
+  --muted: var(--color-surface-subtle);
+  --muted-foreground: var(--color-content-secondary);
+  --destructive: var(--color-state-error);
+  --destructive-foreground: var(--color-state-error-foreground);
+  --border: var(--color-border-default);
+  --input: var(--color-border-strong);
+  --ring: var(--color-border-focus);
 }
 
 .theme-poetic-meadow {
-  --background: #fbfff2;
-  --foreground: #332631;
-  --card: #fffffb;
-  --card-foreground: #332631;
-  --popover: #fffffb;
-  --popover-foreground: #332631;
-  --primary: #ccb6de;
-  --primary-foreground: #2f2438;
-  --secondary: #f6d6df;
-  --secondary-foreground: #4a2934;
-  --accent: #ddeab8;
-  --accent-foreground: #283416;
-  --muted: #f5eef1;
-  --muted-foreground: #746371;
-  --destructive: #d86972;
-  --destructive-foreground: #fff8f4;
-  --border: #eadce8;
-  --input: #e2d2e0;
-  --ring: #ccb6de;
+  --background: var(--color-surface-page);
+  --foreground: var(--color-content-title);
+  --card: var(--color-surface-card);
+  --card-foreground: var(--color-content-title);
+  --popover: var(--color-surface-popover);
+  --popover-foreground: var(--color-content-title);
+  --primary: var(--color-brand-500);
+  --primary-foreground: var(--color-brand-foreground);
+  --secondary: var(--color-blush-200);
+  --secondary-foreground: var(--color-blush-900);
+  --accent: var(--color-meadow-200);
+  --accent-foreground: var(--color-meadow-900);
+  --muted: var(--color-surface-subtle);
+  --muted-foreground: var(--color-content-secondary);
+  --destructive: var(--color-state-error);
+  --destructive-foreground: var(--color-state-error-foreground);
+  --border: var(--color-border-default);
+  --input: var(--color-border-strong);
+  --ring: var(--color-border-focus);
 }
 
 .theme-poetic-meadow.dark,

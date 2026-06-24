@@ -3,11 +3,25 @@
 @source "../**/*.{ts,tsx}";
 
 :root {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --muted: #cbd5e1;
-  --border: rgba(248, 250, 252, 0.18);
-  --accent: #38bdf8;
+  --background: var(--color-surface-page);
+  --foreground: var(--color-content-title);
+  --card: var(--color-surface-card);
+  --card-foreground: var(--color-content-title);
+  --popover: var(--color-surface-popover);
+  --popover-foreground: var(--color-content-title);
+  --primary: var(--color-brand-500);
+  --primary-foreground: var(--color-brand-foreground);
+  --secondary: var(--color-blush-200);
+  --secondary-foreground: var(--color-blush-900);
+  --accent: var(--color-meadow-200);
+  --accent-foreground: var(--color-meadow-900);
+  --muted: var(--color-surface-subtle);
+  --muted-foreground: var(--color-content-secondary);
+  --destructive: var(--color-state-error);
+  --destructive-foreground: var(--color-state-error-foreground);
+  --border: var(--color-border-default);
+  --input: var(--color-border-strong);
+  --ring: var(--color-border-focus);
 }
 
 html,

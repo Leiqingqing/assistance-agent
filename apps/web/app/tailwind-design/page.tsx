@@ -87,18 +87,16 @@ function getThemeStyle(tokens: ThemeTokens): ThemeStyle {
     "--border": tokens.border,
     "--input": tokens.input,
     "--ring": tokens.ring,
-    background: tokens.background,
-    color: tokens.foreground,
   };
 }
 
 function ColorSwatch({ name, value }: { name: string; value: string }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--card)]">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
       <div className="h-16" style={{ background: value }} />
       <div className="grid gap-1 p-3">
-        <span className="text-xs font-semibold text-[var(--foreground)]">{name}</span>
-        <span className="font-mono text-[11px] text-[var(--muted-foreground)]">
+        <span className="text-caption text-foreground">{name}</span>
+        <span className="font-mono text-caption text-muted-foreground">
           {value}
         </span>
       </div>
@@ -116,10 +114,10 @@ function TokenGroup({
   return (
     <div className="grid gap-3">
       <div>
-        <h3 className="text-lg font-bold tracking-[-0.03em] text-[var(--foreground)]">
+        <h3 className="text-title text-foreground">
           {label}
         </h3>
-        <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+        <p className="mt-1 text-body text-muted-foreground">
           @theme 中对应 `--color-{label.toLowerCase()}-*`
         </p>
       </div>
@@ -136,14 +134,14 @@ function ScaleRow({ label, scale }: { label: string; scale: ColorScale }) {
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm font-semibold text-[var(--foreground)]">{label}</p>
-        <p className="font-mono text-xs text-[var(--muted-foreground)]">50-900</p>
+        <p className="text-body font-semibold text-foreground">{label}</p>
+        <p className="font-mono text-caption text-muted-foreground">50-900</p>
       </div>
-      <div className="grid grid-cols-5 overflow-hidden rounded-xl border border-[var(--border)] sm:grid-cols-10">
+      <div className="grid grid-cols-5 overflow-hidden rounded-xl border border-border sm:grid-cols-10">
         {Object.entries(scale).map(([step, color]) => (
           <div className="grid gap-2 p-2" key={step} style={{ background: color }}>
-            <span className="text-[10px] font-semibold text-black/65">{step}</span>
-            <span className="font-mono text-[9px] text-black/55">{color}</span>
+            <span className="text-caption text-content-title/65">{step}</span>
+            <span className="font-mono text-caption text-content-title/55">{color}</span>
           </div>
         ))}
       </div>
@@ -156,12 +154,12 @@ function ShadowGrid({ shadows }: { shadows: ShadowTokens }) {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {Object.entries(shadowLabels).map(([key, label]) => (
         <div
-          className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4"
+          className="rounded-xl border border-border bg-card p-4"
           key={key}
           style={{ boxShadow: shadows[key as keyof ShadowTokens] }}
         >
-          <p className="text-sm font-semibold text-[var(--foreground)]">{label}</p>
-          <p className="mt-2 font-mono text-[11px] leading-5 text-[var(--muted-foreground)]">
+          <p className="text-body font-semibold text-foreground">{label}</p>
+          <p className="mt-2 font-mono text-caption text-muted-foreground">
             {shadows[key as keyof ShadowTokens]}
           </p>
         </div>
@@ -175,16 +173,16 @@ function RadiusGrid({ radius }: { radius: RadiusTokens }) {
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {Object.entries(radiusLabels).map(([key, label]) => (
         <div
-          className="border border-[var(--border)] bg-[var(--card)] p-4"
+          className="border border-border bg-card p-4"
           key={key}
           style={{ borderRadius: radius[key as keyof RadiusTokens] }}
         >
           <div
-            className="mb-4 h-16 bg-[var(--secondary)]"
+            className="mb-4 h-16 bg-secondary"
             style={{ borderRadius: radius[key as keyof RadiusTokens] }}
           />
-          <p className="text-sm font-semibold text-[var(--foreground)]">{label}</p>
-          <p className="mt-1 font-mono text-xs text-[var(--muted-foreground)]">
+          <p className="text-body font-semibold text-foreground">{label}</p>
+          <p className="mt-1 font-mono text-caption text-muted-foreground">
             {radius[key as keyof RadiusTokens]}
           </p>
         </div>
@@ -198,15 +196,15 @@ function TypographyGrid({ typography }: { typography: TypographyTokens }) {
     <div className="grid gap-4">
       {Object.entries(typography.scale).map(([key, step]) => (
         <div
-          className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4"
+          className="rounded-2xl border border-border bg-card p-4"
           key={key}
         >
-          <p className="font-mono text-xs text-[var(--muted-foreground)]">
+          <p className="font-mono text-caption text-muted-foreground">
             {typographyLabels[key as keyof TypographyTokens["scale"]]} /{" "}
             {step.fontSize} / {step.lineHeight}
           </p>
           <p
-            className="mt-2 text-[var(--foreground)]"
+            className="mt-2 text-foreground"
             style={{
               fontSize: step.fontSize,
               fontWeight: step.fontWeight,
@@ -231,7 +229,7 @@ const designPrinciples = [
   },
   {
     title: "自然底色承托情绪",
-    description: "背景继续使用 #FBFFF2，保留草地感和呼吸感，让情绪色只做重点表达。",
+    description: "背景继续使用 surface.page，保留草地感和呼吸感，让情绪色只做重点表达。",
   },
   {
     title: "低压交互反馈",
@@ -268,25 +266,24 @@ export default function TailwindDesignPage() {
 
   return (
     <main
-      className="min-h-svh px-5 py-8 sm:px-8 lg:px-10"
+      className="min-h-svh bg-background px-5 py-8 text-foreground sm:px-8 lg:px-10"
       style={getThemeStyle(tokens)}
     >
       <div className="mx-auto grid w-full max-w-7xl gap-8">
         <header
-          className="relative overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--card)] p-6 sm:p-8 lg:p-10"
-          style={{ boxShadow: tokens.shadows.lg }}
+          className="relative overflow-hidden rounded-3xl border border-border bg-card p-6 shadow-lg sm:p-8 lg:p-10"
         >
-          <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-[var(--primary)] via-[var(--secondary)] to-[var(--accent)]" />
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[var(--primary)]">
+          <div className="absolute inset-x-0 top-0 h-2 bg-gradient-to-r from-primary via-secondary to-accent" />
+          <p className="text-caption uppercase text-primary">
             Selected Scheme / 05
           </p>
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
             <div>
-              <h1 className="text-4xl font-black tracking-[-0.05em] sm:text-5xl">
+              <h1 className="text-display">
                 {theme.name}
               </h1>
-              <p className="mt-4 max-w-3xl text-base leading-7 text-[var(--muted-foreground)]">
-                {theme.concept} 基于品牌色 #CCB6DE 与背景色 #FBFFF2，强化粉紫、
+              <p className="mt-4 max-w-3xl text-body-lg text-muted-foreground">
+                {theme.concept} 基于 brand.500 与 surface.page，强化粉紫、
                 樱草粉和草地绿之间的情绪层次。
               </p>
             </div>
@@ -297,13 +294,13 @@ export default function TailwindDesignPage() {
           <div className="mt-8 grid gap-3 sm:grid-cols-3">
             {designPrinciples.map((principle) => (
               <div
-                className="rounded-2xl border border-[var(--border)] bg-[var(--muted)] p-4"
+                className="rounded-2xl border border-border bg-muted p-4"
                 key={principle.title}
               >
-                <p className="font-semibold text-[var(--foreground)]">
+                <p className="font-semibold text-foreground">
                   {principle.title}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+                <p className="mt-2 text-body text-muted-foreground">
                   {principle.description}
                 </p>
               </div>
@@ -313,19 +310,19 @@ export default function TailwindDesignPage() {
 
         <section className="grid gap-5 lg:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
           <Card className="overflow-hidden">
-            <div className="h-2 bg-gradient-to-r from-[var(--primary)] via-[var(--secondary)] to-[var(--accent)]" />
+            <div className="h-2 bg-gradient-to-r from-primary via-secondary to-accent" />
             <CardHeader>
               <CardTitle>产品场景示例</CardTitle>
               <CardDescription>{theme.usage}</CardDescription>
             </CardHeader>
             <Separator />
             <CardContent className="grid gap-5 pt-6">
-              <div className="rounded-3xl bg-[var(--secondary)] p-5 text-[var(--secondary-foreground)]">
-                <p className="text-sm font-semibold">今日陪伴提示</p>
-                <p className="mt-3 text-2xl font-black tracking-[-0.04em]">
+              <div className="rounded-3xl bg-secondary p-5 text-secondary-foreground">
+                <p className="text-body font-semibold">今日陪伴提示</p>
+                <p className="mt-3 text-title">
                   慢一点也没关系，我们先从一句话开始。
                 </p>
-                <p className="mt-3 text-sm leading-6 opacity-80">
+                <p className="mt-3 text-body opacity-80">
                   Secondary 用于情绪化提示区域，既有亲密感，也不会抢走主要行动。
                 </p>
               </div>
@@ -345,7 +342,7 @@ export default function TailwindDesignPage() {
                 <Button>开始记录</Button>
                 <Button variant="outline">稍后再说</Button>
                 <Button
-                  className="bg-[var(--accent)] text-[var(--accent-foreground)] hover:bg-[var(--accent)]/90"
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
                   variant="ghost"
                 >
                   给我一点鼓励
@@ -362,7 +359,7 @@ export default function TailwindDesignPage() {
             <CardContent className="grid gap-3">
               {tokenRoles.map((role) => (
                 <div
-                  className="grid grid-cols-[4rem_1fr] gap-3 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3"
+                  className="grid grid-cols-[4rem_1fr] gap-3 rounded-2xl border border-border bg-card p-3"
                   key={role.token}
                 >
                   <div
@@ -370,13 +367,13 @@ export default function TailwindDesignPage() {
                     style={{ background: tokens[role.token] }}
                   />
                   <div>
-                    <p className="font-semibold text-[var(--foreground)]">
+                    <p className="font-semibold text-foreground">
                       {role.name}
                     </p>
-                    <p className="font-mono text-xs text-[var(--muted-foreground)]">
+                    <p className="font-mono text-caption text-muted-foreground">
                       {role.token}: {tokens[role.token]}
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">
+                    <p className="mt-2 text-body text-muted-foreground">
                       {role.usage}
                     </p>
                   </div>
@@ -410,7 +407,7 @@ export default function TailwindDesignPage() {
               <CardHeader>
                 <CardTitle>色阶</CardTitle>
                 <CardDescription>
-                  品牌紫固定锚点为 #CCB6DE；花瓣粉负责情绪，草地绿负责自然感。
+                  品牌紫固定锚点为 brand.500；花瓣粉负责情绪，草地绿负责自然感。
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-5">

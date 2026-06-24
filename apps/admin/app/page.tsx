@@ -15,7 +15,7 @@ import styles from "./page.module.css";
 
 export default function AdminHome() {
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} theme-poetic-meadow dark`}>
       <section className={styles.panel}>
         <p className={styles.eyebrow}>Admin App</p>
         <h1>管理后台</h1>
@@ -30,31 +30,23 @@ export default function AdminHome() {
             Shared UI
           </Button>
         </div>
-        <Card className="mt-8 border-white/15 bg-slate-950/45 text-white shadow-2xl shadow-sky-950/20">
+        <Card className="mt-8 bg-card/80 shadow-lg">
           <CardHeader>
             <CardTitle>管理员组件验证</CardTitle>
-            <CardDescription className="text-slate-300">
+            <CardDescription>
               这里使用 @repo/ui 导出的 Button、Label、Input、Card 和
               Separator，验证 admin app 可以消费共享 Tailwind 组件。
             </CardDescription>
           </CardHeader>
-          <Separator className="bg-white/15" />
+          <Separator />
           <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="admin-query">查询对象</Label>
-              <Input
-                className="border-white/15 bg-white/10 text-white placeholder:text-slate-400"
-                id="admin-query"
-                placeholder="用户 ID / 工单 ID"
-              />
+              <Input id="admin-query" placeholder="用户 ID / 工单 ID" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="admin-scope">权限范围</Label>
-              <Input
-                className="border-white/15 bg-white/10 text-white placeholder:text-slate-400"
-                id="admin-scope"
-                placeholder="operator / owner"
-              />
+              <Input id="admin-scope" placeholder="operator / owner" />
             </div>
           </CardContent>
           <CardFooter className="justify-end gap-3">

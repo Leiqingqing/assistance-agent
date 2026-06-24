@@ -22,14 +22,14 @@ export default function Home() {
         <header className="flex flex-col gap-5 py-8 sm:py-10 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
             <p
-              className={`${styles.eyebrow} inline-flex rounded-full border border-border px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-primary shadow-sm`}
+              className={`${styles.eyebrow} inline-flex rounded-full border border-border px-3 py-1 text-caption uppercase text-primary shadow-sm`}
             >
               @repo/ui + Tailwind CSS
             </p>
-            <h1 className="mt-5 text-4xl font-black tracking-[-0.05em] text-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="mt-5 text-display text-foreground">
               shadcn/ui 共享组件验证台
             </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-muted-foreground sm:text-lg">
+            <p className="mt-5 max-w-2xl text-body-lg text-muted-foreground">
               使用共享主题色和响应式布局，验证 web app 可以消费 @repo/ui
               中的 Button、Slot、Label、Input、Card 和 Separator。
             </p>
@@ -50,9 +50,9 @@ export default function Home() {
 
         <section className="grid flex-1 gap-6 pb-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-start">
           <Card
-            className={`${styles.primaryCard} overflow-hidden shadow-2xl shadow-lime-950/10 backdrop-blur`}
+            className={`${styles.primaryCard} overflow-hidden shadow-lg backdrop-blur`}
           >
-            <div className="h-2 bg-gradient-to-r from-primary via-[var(--accent)] to-primary/50" />
+            <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary/50" />
             <CardHeader>
               <CardTitle>创建验证记录</CardTitle>
               <CardDescription>
@@ -82,7 +82,7 @@ export default function Home() {
 
           <aside className="grid gap-6">
             <Card
-              className={`${styles.secondaryCard} shadow-xl shadow-lime-950/5 backdrop-blur`}
+              className={`${styles.secondaryCard} shadow-md backdrop-blur`}
             >
               <CardHeader>
                 <CardTitle>主题色</CardTitle>
@@ -92,14 +92,14 @@ export default function Home() {
               </CardHeader>
               <CardContent className="grid gap-3">
                 <div className="rounded-xl bg-primary p-4 text-primary-foreground">
-                  <p className="text-sm font-semibold">Primary</p>
-                  <p className="mt-1 text-xs opacity-85">按钮、强调状态与焦点色</p>
+                  <p className="text-body font-semibold">Primary</p>
+                  <p className="mt-1 text-caption opacity-85">按钮、强调状态与焦点色</p>
                 </div>
                 <div
                   className={`${styles.accentPanel} rounded-xl border border-border p-4 text-foreground`}
                 >
-                  <p className="text-sm font-semibold">Accent</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <p className="text-body font-semibold">Accent</p>
+                  <p className="mt-1 text-caption text-muted-foreground">
                     装饰渐变和辅助视觉层次
                   </p>
                 </div>
@@ -108,7 +108,7 @@ export default function Home() {
 
             <Card
               id="component-checklist"
-              className={`${styles.secondaryCard} shadow-xl shadow-lime-950/5 backdrop-blur`}
+              className={`${styles.secondaryCard} shadow-md backdrop-blur`}
             >
               <CardHeader>
                 <CardTitle>组件清单</CardTitle>
@@ -120,12 +120,12 @@ export default function Home() {
               <CardContent className="grid gap-3 pt-6">
                 {components.map((item) => (
                   <div
-                    className={`${styles.listItem} flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm`}
+                    className={`${styles.listItem} flex items-center justify-between rounded-lg border border-border px-3 py-2 text-body`}
                     key={item}
                   >
                     <span className="font-medium">{item}</span>
                     <span
-                      className={`${styles.statusBadge} rounded-full px-2 py-0.5 text-xs font-semibold text-primary`}
+                      className={`${styles.statusBadge} rounded-full px-2 py-0.5 text-caption text-primary`}
                     >
                       loaded
                     </span>
