@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { hc } from "hono/client";
 import {
   pingRequestSchema,
@@ -11,21 +11,13 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@repo/ui/card";
-import { Input } from "@repo/ui/input";
-import { Label } from "@repo/ui/label";
 import { Separator } from "@repo/ui/separator";
 import type { AppType } from "api/app";
+import { getServerApiBaseUrl } from "../.env.server";
 import styles from "./page.module.css";
-
-const components = ["Button", "Slot", "Label", "Input", "Card", "Separator"] as const;
-const apiBaseUrl =
-  process.env.API_BASE_URL ??
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://127.0.0.1:3002";
 
 export const dynamic = "force-dynamic";
 
@@ -35,7 +27,7 @@ interface PingCheck {
 }
 
 async function getPingCheck(): Promise<PingCheck> {
-  const client = hc<AppType>(apiBaseUrl);
+  const client = hc<AppType>(getServerApiBaseUrl());
   const request = pingRequestSchema.parse({
     nonce: crypto.randomUUID(),
     sentAt: new Date().toISOString(),
@@ -74,7 +66,7 @@ async function getPingCheck(): Promise<PingCheck> {
 
 export default async function Home() {
   const pingCheck = await getPingCheck();
-  const errorCode = pingCheck.response.ok ? "无" : pingCheck.response.error.code;
+  const errorCode = pingCheck.response.ok ? "none" : pingCheck.response.error.code;
 
   return (
     <div className={`${styles.page} theme-poetic-meadow`}>
@@ -87,20 +79,20 @@ export default async function Home() {
               @repo/ui + Tailwind CSS
             </p>
             <h1 className="mt-5 text-display text-foreground">
-              shadcn/ui 共享组件验证台
+              shadcn/ui shared component bench
             </h1>
             <p className="mt-5 max-w-2xl text-body-lg text-muted-foreground">
-              使用共享主题色和响应式布局，验证 web app 可以消费 @repo/ui
-              中的 Button、Slot、Label、Input、Card 和 Separator。
+              Validate that the web app can consume shared theme tokens and
+              components from @repo/ui.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Button size="sm">主题主色</Button>
+            <Button size="sm">Theme primary</Button>
             <Button size="sm" variant="outline">
-              响应式验证
+              Responsive check
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href="/tailwind-design">Token 方案</Link>
+              <Link href="/tailwind-design">Token plan</Link>
             </Button>
             <Button asChild size="sm" variant="secondary">
               <a href="#component-checklist">Slot asChild</a>
@@ -109,127 +101,40 @@ export default async function Home() {
         </header>
 
         <section className="grid flex-1 gap-6 pb-8 lg:grid-cols-[minmax(0,1.25fr)_minmax(320px,0.75fr)] lg:items-start">
-          <Card
-            className={`${styles.primaryCard} overflow-hidden shadow-lg backdrop-blur`}
-          >
-            <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary/50" />
+          <Card className={`${styles.secondaryCard} shadow-md backdrop-blur`}>
             <CardHeader>
-              <CardTitle>创建验证记录</CardTitle>
+              <CardTitle>Request chain</CardTitle>
               <CardDescription>
-                表单控件来自 @repo/ui，语义色来自共享主题 token。
+                The home page calls API `/ping` through Hono RPC and validates
+                both request and response with zod.
               </CardDescription>
             </CardHeader>
             <Separator />
-            <CardContent className="grid gap-5 pt-6 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="title">标题</Label>
-                <Input id="title" placeholder="共享组件验证台" />
+            <CardContent className="grid gap-3 pt-6 text-body">
+              <div className="rounded-lg border border-border bg-background/60 p-3">
+                <p className="mb-2 font-medium">Request body</p>
+                <pre className="overflow-auto whitespace-pre-wrap text-caption text-muted-foreground">
+                  {JSON.stringify(pingCheck.request, null, 2)}
+                </pre>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="owner">负责人</Label>
-                <Input id="owner" placeholder="web app" />
+              <div className="rounded-lg border border-border bg-background/60 p-3">
+                <p className="mb-2 font-medium">Response body</p>
+                <pre className="overflow-auto whitespace-pre-wrap text-caption text-muted-foreground">
+                  {JSON.stringify(pingCheck.response, null, 2)}
+                </pre>
               </div>
-              <div className="grid gap-2 sm:col-span-2">
-                <Label htmlFor="status">状态</Label>
-                <Input id="status" placeholder="ready / testing / done" />
+              <div className="flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2">
+                <span className="font-medium">Error code</span>
+                <span
+                  className={`${styles.statusBadge} rounded-full px-2 py-0.5 text-caption ${
+                    pingCheck.response.ok ? "text-primary" : "text-destructive"
+                  }`}
+                >
+                  {errorCode}
+                </span>
               </div>
             </CardContent>
-            <CardFooter className="flex-col items-stretch gap-3 sm:flex-row sm:justify-end">
-              <Button variant="outline">取消</Button>
-              <Button>提交验证</Button>
-            </CardFooter>
           </Card>
-
-          <aside className="grid gap-6">
-            <Card
-              className={`${styles.secondaryCard} shadow-md backdrop-blur`}
-            >
-              <CardHeader>
-                <CardTitle>主题色</CardTitle>
-                <CardDescription>
-                  当前页面挂载 `theme-poetic-meadow`，组件自动读取 CSS 变量。
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <div className="rounded-xl bg-primary p-4 text-primary-foreground">
-                  <p className="text-body font-semibold">Primary</p>
-                  <p className="mt-1 text-caption opacity-85">按钮、强调状态与焦点色</p>
-                </div>
-                <div
-                  className={`${styles.accentPanel} rounded-xl border border-border p-4 text-foreground`}
-                >
-                  <p className="text-body font-semibold">Accent</p>
-                  <p className="mt-1 text-caption text-muted-foreground">
-                    装饰渐变和辅助视觉层次
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={`${styles.secondaryCard} shadow-md backdrop-blur`}
-            >
-              <CardHeader>
-                <CardTitle>请求链路</CardTitle>
-                <CardDescription>
-                  首页通过 Hono RPC 调用 API `/ping`，并用 zod 校验输入和输出。
-                </CardDescription>
-              </CardHeader>
-              <Separator />
-              <CardContent className="grid gap-3 pt-6 text-body">
-                <div className="rounded-lg border border-border bg-background/60 p-3">
-                  <p className="mb-2 font-medium">请求体</p>
-                  <pre className="overflow-auto whitespace-pre-wrap text-caption text-muted-foreground">
-                    {JSON.stringify(pingCheck.request, null, 2)}
-                  </pre>
-                </div>
-                <div className="rounded-lg border border-border bg-background/60 p-3">
-                  <p className="mb-2 font-medium">返回值</p>
-                  <pre className="overflow-auto whitespace-pre-wrap text-caption text-muted-foreground">
-                    {JSON.stringify(pingCheck.response, null, 2)}
-                  </pre>
-                </div>
-                <div className="flex items-center justify-between rounded-lg border border-border bg-background/60 px-3 py-2">
-                  <span className="font-medium">错误码</span>
-                  <span
-                    className={`${styles.statusBadge} rounded-full px-2 py-0.5 text-caption ${
-                      pingCheck.response.ok ? "text-primary" : "text-destructive"
-                    }`}
-                  >
-                    {errorCode}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              id="component-checklist"
-              className={`${styles.secondaryCard} shadow-md backdrop-blur`}
-            >
-              <CardHeader>
-                <CardTitle>组件清单</CardTitle>
-                <CardDescription>
-                  第一批基础组件已经从共享包导入并在首页渲染。
-                </CardDescription>
-              </CardHeader>
-              <Separator />
-              <CardContent className="grid gap-3 pt-6">
-                {components.map((item) => (
-                  <div
-                    className={`${styles.listItem} flex items-center justify-between rounded-lg border border-border px-3 py-2 text-body`}
-                    key={item}
-                  >
-                    <span className="font-medium">{item}</span>
-                    <span
-                      className={`${styles.statusBadge} rounded-full px-2 py-0.5 text-caption text-primary`}
-                    >
-                      loaded
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </aside>
         </section>
       </main>
     </div>

@@ -27,6 +27,9 @@ yarn-error.log*
 
 # env files (can opt-in for commiting if needed)
 .env*
+!.env.example
+!.env.ts
+!app/.env*.ts
 
 # vercel
 .vercel

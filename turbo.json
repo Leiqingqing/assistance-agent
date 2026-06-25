@@ -1,22 +1,33 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
-  "globalEnv": ["PORT", "API_BASE_URL"],
+  "globalEnv": [
+    "PORT",
+    "APP_ENV",
+    "API_BASE_URL",
+    "NEXT_PUBLIC_APP_ENV",
+    "NEXT_PUBLIC_API_BASE_URL"
+  ],
   "ui": "tui",
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": [".next/**", "!.next/cache/**"],
+      "env": ["APP_ENV", "API_BASE_URL", "NEXT_PUBLIC_APP_ENV", "NEXT_PUBLIC_API_BASE_URL"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "env": ["APP_ENV", "API_BASE_URL", "NEXT_PUBLIC_APP_ENV", "NEXT_PUBLIC_API_BASE_URL"]
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types"],
+      "env": ["APP_ENV", "API_BASE_URL", "NEXT_PUBLIC_APP_ENV", "NEXT_PUBLIC_API_BASE_URL"]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["APP_ENV", "API_BASE_URL", "NEXT_PUBLIC_APP_ENV", "NEXT_PUBLIC_API_BASE_URL"]
+
     }
   }
 }

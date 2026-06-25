@@ -3,7 +3,24 @@
   "name": "assistance-agent-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-04-30",
-  "observability": {
-    "enabled": true
+  "vars": {
+    "APP_ENV": "development",
+  },
+  "env": {
+    "development": {
+      "vars": {
+        "APP_ENV": "development",
+      }
+    },
+    "test": {
+      "vars": {
+        "APP_ENV": "test",
+      }
+    },
+    "production": {
+      "vars": {
+        "APP_ENV": "production",
+      }
+    }
   }
 }

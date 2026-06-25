@@ -10,6 +10,8 @@ import {
   type PingResponse,
 } from "@repo/contracts";
 import { HTTPException } from "hono/http-exception";
+import { getApiBaseUrl, getAppEnv, type ApiEnvBindings } from "../.env";
+
 
 type AppErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 500 | 504;
 
@@ -30,7 +32,7 @@ const createMeta = () => ({
   timestamp: new Date().toISOString(),
 });
 
-const app = new Hono();
+const app = new Hono<{ Bindings: ApiEnvBindings }>();
 
 app.notFound((c) => {
   const errorMsg = {
@@ -84,15 +86,22 @@ app.onError((error, c) => {
 
 const routes = app
   .get("/", (c) => {
+    const appEnv = getAppEnv(c.env);
+
     return c.json({
       service: "api",
       framework: "hono",
+      appEnv,
     });
   })
   .get("/health", (c) => {
+    const appEnv = getAppEnv(c.env);
+    getApiBaseUrl(c.env);
+
     return c.json({
       ok: true,
       service: "api",
+      appEnv,
     });
   })
   .post("/ping", async (c) => {

@@ -1,4 +1,4 @@
-import { Button } from "@repo/ui/button";
+﻿import { Button } from "@repo/ui/button";
 import {
   Card,
   CardContent,
@@ -11,20 +11,24 @@ import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { Separator } from "@repo/ui/separator";
 import { TailwindProof } from "@repo/ui/tailwind-proof";
+import { getServerApiBaseUrl } from "../.env.server";
 import styles from "./page.module.css";
 
 export default function AdminHome() {
+  const apiHealthUrl = new URL("/health", getServerApiBaseUrl()).toString();
+
   return (
     <main className={`${styles.page} theme-poetic-meadow dark`}>
       <section className={styles.panel}>
         <p className={styles.eyebrow}>Admin App</p>
-        <h1>管理后台</h1>
+        <h1>Admin console</h1>
         <p className={styles.description}>
-          面向运营和管理员的 Next.js 后台应用，默认运行在 3001 端口。
+          Next.js admin app for operators and administrators. It runs on port
+          3001 by default.
         </p>
         <div className={styles.actions}>
-          <a className={styles.primary} href="http://localhost:3002/health">
-            检查 API
+          <a className={styles.primary} href={apiHealthUrl}>
+            Check API
           </a>
           <Button className={styles.secondary} variant="outline">
             Shared UI
@@ -32,26 +36,26 @@ export default function AdminHome() {
         </div>
         <Card className="mt-8 bg-card/80 shadow-lg">
           <CardHeader>
-            <CardTitle>管理员组件验证</CardTitle>
+            <CardTitle>Admin component check</CardTitle>
             <CardDescription>
-              这里使用 @repo/ui 导出的 Button、Label、Input、Card 和
-              Separator，验证 admin app 可以消费共享 Tailwind 组件。
+              This page uses Button, Label, Input, Card, and Separator from
+              @repo/ui to validate shared Tailwind components.
             </CardDescription>
           </CardHeader>
           <Separator />
           <CardContent className="grid gap-4 pt-6 sm:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="admin-query">查询对象</Label>
-              <Input id="admin-query" placeholder="用户 ID / 工单 ID" />
+              <Label htmlFor="admin-query">Query target</Label>
+              <Input id="admin-query" placeholder="User ID / ticket ID" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="admin-scope">权限范围</Label>
+              <Label htmlFor="admin-scope">Access scope</Label>
               <Input id="admin-scope" placeholder="operator / owner" />
             </div>
           </CardContent>
           <CardFooter className="justify-end gap-3">
-            <Button variant="ghost">重置</Button>
-            <Button>执行检查</Button>
+            <Button variant="ghost">Reset</Button>
+            <Button>Run check</Button>
           </CardFooter>
         </Card>
         <TailwindProof appName="Admin App" tone="violet" />
