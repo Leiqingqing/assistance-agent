@@ -1,3 +1,4 @@
+import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
 import {
   BizCode,
@@ -104,31 +105,35 @@ const routes = app
       appEnv,
     });
   })
-  .post("/ping", async (c) => {
-    const body = await c.req.json().catch(() => undefined);
-    const request = pingRequestSchema.safeParse(body);
+  .post(
+    "/ping",
+    zValidator("json", pingRequestSchema, (result) => {
+      if (!result.success) {
+        throw new AppError<PingError>(
+          BizCode.COMMON_INVALID_REQUEST,
+          "Invalid ping request",
+          400,
+          {
+            reason:
+              result.error.issues[0]?.message ?? "Request body is invalid",
+          },
+        );
+      }
+    }),
+    (c) => {
+      const request = c.req.valid("json");
 
-    if (!request.success) {
-      throw new AppError<PingError>(
-        BizCode.COMMON_INVALID_REQUEST,
-        "Invalid ping request",
-        400,
-        {
-          reason: request.error.issues[0]?.message ?? "Request body is invalid",
-        },
-      );
-    }
+      const result: PingResult = {
+        pong: true,
+        echo: request,
+        serverTime: new Date().toISOString(),
+      };
 
-    const result: PingResult = {
-      pong: true,
-      echo: request.data,
-      serverTime: new Date().toISOString(),
-    };
+      const response = buildSuccess(createMeta(), result) satisfies PingResponse;
 
-    const response = buildSuccess(createMeta(), result) satisfies PingResponse;
-
-    return c.json(pingResponseSchema.parse(response));
-  });
+      return c.json(pingResponseSchema.parse(response));
+    },
+  );
 
 export type AppType = typeof routes;
 
