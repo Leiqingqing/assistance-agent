@@ -1,37 +1,8 @@
-import { zValidator } from "@hono/zod-validator";
 import { Hono } from "hono";
-import {
-  BizCode,
-  buildFailure,
-  buildSuccess,
-  pingRequestSchema,
-  pingResponseSchema,
-  type PingError,
-  type PingResult,
-  type PingResponse,
-} from "@repo/contracts";
+import { AppError, BizCode, buildFailure, createMeta } from "@repo/contracts/common";
 import { HTTPException } from "hono/http-exception";
-import { getApiBaseUrl, getAppEnv, type ApiEnvBindings } from "../.env";
-
-
-type AppErrorStatus = 400 | 401 | 403 | 404 | 409 | 422 | 500 | 504;
-
-export class AppError<E> extends Error {
-  constructor(
-    readonly code: BizCode,
-    message: string,
-    readonly status: AppErrorStatus,
-    readonly details?: E,
-  ) {
-    super(message);
-    this.name = "AppError";
-  }
-}
-
-const createMeta = () => ({
-  requestId: crypto.randomUUID(),
-  timestamp: new Date().toISOString(),
-});
+import { type ApiEnvBindings } from "../.env";
+import routes from "./routes";
 
 const app = new Hono<{ Bindings: ApiEnvBindings }>();
 
@@ -85,56 +56,8 @@ app.onError((error, c) => {
   return c.json(res, 500);
 });
 
-const routes = app
-  .get("/", (c) => {
-    const appEnv = getAppEnv(c.env);
+const appRoutes = app.route("/", routes);
 
-    return c.json({
-      service: "api",
-      framework: "hono",
-      appEnv,
-    });
-  })
-  .get("/health", (c) => {
-    const appEnv = getAppEnv(c.env);
-    getApiBaseUrl(c.env);
+export type AppType = typeof appRoutes;
 
-    return c.json({
-      ok: true,
-      service: "api",
-      appEnv,
-    });
-  })
-  .post(
-    "/ping",
-    zValidator("json", pingRequestSchema, (result) => {
-      if (!result.success) {
-        throw new AppError<PingError>(
-          BizCode.COMMON_INVALID_REQUEST,
-          "Invalid ping request",
-          400,
-          {
-            reason:
-              result.error.issues[0]?.message ?? "Request body is invalid",
-          },
-        );
-      }
-    }),
-    (c) => {
-      const request = c.req.valid("json");
-
-      const result: PingResult = {
-        pong: true,
-        echo: request,
-        serverTime: new Date().toISOString(),
-      };
-
-      const response = buildSuccess(createMeta(), result) satisfies PingResponse;
-
-      return c.json(pingResponseSchema.parse(response));
-    },
-  );
-
-export type AppType = typeof routes;
-
-export default routes;
+export default appRoutes;
