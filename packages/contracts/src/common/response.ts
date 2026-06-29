@@ -11,19 +11,19 @@ export interface ApiSuccess<T> {
   data: T;
 }
 
-export interface ApiError<E> {
+export interface ApiError<E = unknown> {
   code: BizCode;
   message: string;
   details?: E;
 }
 
-export interface ApiFailure<E> {
+export interface ApiFailure<E = unknown> {
   ok: false;
   meta: ApiMeta;
   error: ApiError<E>;
 }
 
-export type ApiResponse<T, E> = ApiSuccess<T> | ApiFailure<E>;
+export type ApiResponse<T, E = unknown> = ApiSuccess<T> | ApiFailure<E>;
 
 export const createMeta = (): ApiMeta => ({
   requestId: crypto.randomUUID(),
