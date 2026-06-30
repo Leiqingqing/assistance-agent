@@ -20,6 +20,7 @@
     "@hono/zod-validator": "^0.8.0",
     "@repo/contracts": "workspace:*",
     "hono": "catalog:",
+    "uuidv7": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
