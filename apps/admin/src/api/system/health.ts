@@ -1,10 +1,5 @@
+import { healthResponseSchema, type HealthResponse } from "@repo/contracts";
 import { getServerApiBaseUrl } from "../../../.env.server";
-
-interface HealthResponseBody {
-  ok?: boolean;
-  service?: string;
-  appEnv?: string;
-}
 
 export interface HealthCheck {
   url: string;
@@ -19,14 +14,16 @@ export async function getHealthCheck(): Promise<HealthCheck> {
 
   try {
     const response = await fetch(url, { cache: "no-store" });
-    const body = (await response.json()) as HealthResponseBody;
+    const body = healthResponseSchema.parse(
+      (await response.json()) as HealthResponse,
+    );
 
     return {
       url,
       ok: response.ok && body.ok === true,
-      service: body.service,
-      appEnv: body.appEnv,
-      error: response.ok ? undefined : `HTTP ${response.status}`,
+      service: body.ok ? body.data.service : undefined,
+      appEnv: body.ok ? body.data.appEnv : undefined,
+      error: body.ok ? undefined : body.error.message,
     };
   } catch (error) {
     return {

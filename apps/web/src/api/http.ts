@@ -1,17 +1,11 @@
-import {
-  ApiResponse,
-  BizCode
-} from "@repo/contracts/common";
+import { ApiResponse, BizCode } from "@repo/contracts/common";
 import { getApiBaseUrlEnv } from "../../.env";
 
 type HttpMethod = "GET" | "POST";
 type HttpQueryValue = string | number | boolean;
-type HttpQuery = Record<
-  string,
-  HttpQueryValue | null 
->;
+type HttpQuery = Record<string, HttpQueryValue | null>;
 
-export type HttpGetOptions =  {
+export type HttpGetOptions = {
   init?: RequestInit;
   query?: HttpQuery;
 };
@@ -51,15 +45,15 @@ function resolveUrl(path: string, query?: HttpQuery) {
 }
 
 // 处理params、处理header、拼接url、post body 序列化、处理异常response
-async function request<TData>(
+async function request<TData, TError = unknown>(
   method: HttpMethod,
   path: string,
   options: {
     init?: RequestInit;
     query?: HttpQuery;
     payload?: unknown;
-  }
-) : Promise<ApiResponse<TData>> {
+  },
+): Promise<ApiResponse<TData, TError>> {
   try {
     const headers = new Headers(options.init?.headers);
     headers.set("accept", "application/json");
@@ -69,40 +63,51 @@ async function request<TData>(
     }
 
     const response = await fetch(resolveUrl(path, options.query), {
+      ...options.init,
       method,
       headers,
-      body: options.payload === undefined ? undefined : JSON.stringify(options.payload),
+      body:
+        options.payload === undefined
+          ? undefined
+          : JSON.stringify(options.payload),
     });
-    
-    return response.json()
+
+    return response.json();
   } catch (e) {
-   
+    const message = e instanceof Error ? e.message : "API request failed";
+
     return {
-      ok:false,
+      ok: false,
       meta: {
-        requestId: 'unavailable',
+        requestId: "unavailable",
         timestamp: new Date().toISOString(),
       },
       error: {
         code: BizCode.SYSTEM_UPSTREAM_TIMEOUT,
-        message: e instanceof Error ? e.message : 'API request failed',
+        message,
+        details: {
+          reason: message,
+        } as TError,
       },
-    }
+    };
   }
 }
 
 export const http = {
-  get<TData>(
-    path: string,
-    options: HttpGetOptions = {},
-  ) {
-    return request<TData>("GET", path,{query: options?.query, ...options.init});
+  get<TData, TError = unknown>(path: string, options: HttpGetOptions = {}) {
+    return request<TData, TError>("GET", path, {
+      init: options.init,
+      query: options.query,
+    });
   },
-  post<TQuery,TData>(
+  post<TQuery, TData, TError = unknown>(
     path: string,
     payload?: TQuery,
     options?: HttpPostOptions,
   ) {
-    return request<TData>("POST", path, {payload, init: options?.init});
+    return request<TData, TError>("POST", path, {
+      payload,
+      init: options?.init,
+    });
   },
 };

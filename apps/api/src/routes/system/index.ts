@@ -7,6 +7,9 @@ import {
   createMeta,
 } from "@repo/contracts/common";
 import {
+  healthResponseSchema,
+  type HealthResult,
+  type HealthResponse,
   pingRequestSchema,
   pingResponseSchema,
   type PingError,
@@ -29,11 +32,17 @@ export const systemRoutes = new Hono<{ Bindings: ApiEnvBindings }>()
     const appEnv = getAppEnv(c.env);
     getApiBaseUrl(c.env);
 
-    return c.json({
+    const result: HealthResult = {
       ok: true,
       service: "api",
       appEnv,
-    });
+    };
+    const response = buildSuccess(
+      createMeta(),
+      result,
+    ) satisfies HealthResponse;
+
+    return c.json(healthResponseSchema.parse(response));
   })
   .post(
     "/ping",
@@ -59,7 +68,10 @@ export const systemRoutes = new Hono<{ Bindings: ApiEnvBindings }>()
         serverTime: new Date().toISOString(),
       };
 
-      const response = buildSuccess(createMeta(), result) satisfies PingResponse;
+      const response = buildSuccess(
+        createMeta(),
+        result,
+      ) satisfies PingResponse;
 
       return c.json(pingResponseSchema.parse(response));
     },

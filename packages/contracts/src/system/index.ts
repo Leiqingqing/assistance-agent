@@ -17,6 +17,17 @@ export interface PingError {
   reason: string;
 }
 
+export interface HealthResult {
+  ok: true;
+  service: string;
+  appEnv: string;
+}
+
+export interface HealthError {
+  reason: string;
+}
+
+export type HealthResponse = ApiResponse<HealthResult, HealthError>;
 export type PingResponse = ApiResponse<PingResult, PingError>;
 
 export const pingRequestSchema = z.object({
@@ -53,3 +64,32 @@ export const pingResponseSchema = z.discriminatedUnion("ok", [
     }),
   }),
 ]) satisfies z.ZodType<PingResponse>;
+
+export const healthResponseSchema = z.discriminatedUnion("ok", [
+  z.object({
+    ok: z.literal(true),
+    meta: z.object({
+      requestId: z.string().min(1),
+      timestamp: z.string().datetime(),
+    }),
+    data: z.object({
+      ok: z.literal(true),
+      service: z.string().min(1),
+      appEnv: z.string().min(1),
+    }),
+  }),
+  z.object({
+    ok: z.literal(false),
+    meta: z.object({
+      requestId: z.string().min(1),
+      timestamp: z.string().datetime(),
+    }),
+    error: z.object({
+      code: z.enum(BizCode),
+      message: z.string().min(1),
+      details: z.object({
+        reason: z.string().min(1),
+      }),
+    }),
+  }),
+]) satisfies z.ZodType<HealthResponse>;
