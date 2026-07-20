@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./auth": "./src/auth/index.ts",
     "./catalog": "./src/catalog/index.ts",
     "./common": "./src/common/index.ts",
     "./order": "./src/order/index.ts",

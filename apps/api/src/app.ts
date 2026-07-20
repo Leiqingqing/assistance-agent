@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { AppError, BizCode, buildFailure, createMeta } from "@repo/contracts/common";
 import { HTTPException } from "hono/http-exception";
-import { type ApiEnvBindings } from "../.env";
+import { type ApiEnvBindings } from "/env";
 import routes from "./routes";
 
 const app = new Hono<{ Bindings: ApiEnvBindings }>();

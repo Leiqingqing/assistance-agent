@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Button } from "@repo/ui/button";
-import styles from "../../../app/page.module.css";
+import styles from "@app/page.module.css";
 import { SystemQueryDemo } from "./system-query-demo";
 
 export const dynamic = "force-dynamic";

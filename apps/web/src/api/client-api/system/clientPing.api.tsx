@@ -4,7 +4,7 @@ import {
   type PingResponse,
   type PingResult,
 } from "@repo/contracts";
-import { http } from "../../http";
+import { http } from "@/api/http";
 
 export function createClientPingRequest(): PingRequest {
   return {

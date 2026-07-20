@@ -1,6 +1,7 @@
 {
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "declaration": false,
     "declarationMap": false,
     "lib": ["ESNext", "WebWorker"],
@@ -8,11 +9,15 @@
     "moduleResolution": "Bundler",
     "noEmit": false,
     "outDir": "./dist",
+    "paths": {
+      "@/*": ["./src/*"],
+      "/env": ["./.env.ts"]
+    },
     "rootDir": ".",
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx"
   },
-  "include": ["src/**/*.ts", ".env.ts"],
+  "include": ["src/**/*.ts", ".env.ts", "worker-configuration.d.ts"],
   "exclude": ["node_modules"]
 }

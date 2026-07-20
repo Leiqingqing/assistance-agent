@@ -10,11 +10,11 @@ import {
   CardTitle,
 } from "@repo/ui/card";
 import { Separator } from "@repo/ui/separator";
-import styles from "../../../app/page.module.css";
-import { systemHealthQueryKey } from "../../api/client-api/system/clientHealth.api";
-import { useClientSystemHealthQuery } from "../../api/client-api/system/clientHealthDemo";
-import { createClientPingRequest } from "../../api/client-api/system/clientPing.api";
-import { useClientSystemPingMutation } from "../../api/client-api/system/clientPingDemo";
+import styles from "@app/page.module.css";
+import { systemHealthQueryKey } from "@/api/client-api/system/clientHealth.api";
+import { useClientSystemHealthQuery } from "@/api/client-api/system/clientHealthDemo";
+import { createClientPingRequest } from "@/api/client-api/system/clientPing.api";
+import { useClientSystemPingMutation } from "@/api/client-api/system/clientPingDemo";
 
 export function SystemQueryDemo() {
   const queryClient = useQueryClient();

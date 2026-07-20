@@ -1,4 +1,4 @@
-﻿import AdminHomePage from "../src/page/system/admin-home-page";
+﻿import AdminHomePage from "@/page/system/admin-home-page";
 
 export const dynamic = "force-dynamic";
 

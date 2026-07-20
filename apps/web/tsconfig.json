@@ -1,6 +1,14 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@app/*": ["./app/*"],
+      "@env": ["./.env.ts"],
+      "@env.server": ["./.env.server.ts"],
+      "/env": ["../api/.env.ts"]
+    },
     "plugins": [
       {
         "name": "next"
@@ -13,6 +21,7 @@
     "**/*.tsx",
     "next-env.d.ts",
     "next.config.js",
+    "../api/worker-configuration.d.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": ["node_modules"]

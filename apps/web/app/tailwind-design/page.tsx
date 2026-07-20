@@ -1,1 +1,1 @@
-export { default } from "../../src/page/catalog/tailwind-design-page";
+export { default } from "@/page/catalog/tailwind-design-page";

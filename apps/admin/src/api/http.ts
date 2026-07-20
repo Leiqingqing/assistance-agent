@@ -1,5 +1,5 @@
 import { ApiResponse, BizCode } from "@repo/contracts/common";
-import { getApiBaseUrlEnv } from "../../.env";
+import { getApiBaseUrlEnv } from "@env";
 
 type HttpMethod = "GET" | "POST";
 type HttpQueryValue = string | number | boolean;

@@ -6,7 +6,7 @@ import {
   type PingResponse,
 } from "@repo/contracts";
 import type { AppType } from "api/app";
-import { getServerApiBaseUrl } from "../../../.env.server";
+import { getServerApiBaseUrl } from "@env.server";
 
 export interface PingCheck {
   request: PingRequest;

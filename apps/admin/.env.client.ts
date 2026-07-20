@@ -1,4 +1,4 @@
-import { getApiBaseUrlEnv, getAppEnv } from "./.env";
+import { getApiBaseUrlEnv, getAppEnv } from "@env";
 
 export function getClientAppEnv() {
   return getAppEnv(process.env.NEXT_PUBLIC_APP_ENV);

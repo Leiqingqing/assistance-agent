@@ -11,8 +11,8 @@ import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { Separator } from "@repo/ui/separator";
 import { TailwindProof } from "@repo/ui/tailwind-proof";
-import { getHealthCheck } from "../../api";
-import styles from "../../../app/page.module.css";
+import { getHealthCheck } from "@/api";
+import styles from "@app/page.module.css";
 
 export const dynamic = "force-dynamic";
 

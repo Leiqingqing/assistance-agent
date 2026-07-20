@@ -3,7 +3,7 @@ import {
   type HealthResponse,
   type HealthResult,
 } from "@repo/contracts";
-import { http } from "../../http";
+import { http } from "@/api/http";
 
 export const systemHealthQueryKey = ["system-health"] as const;
 

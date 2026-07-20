@@ -1,4 +1,4 @@
-﻿import PingPage from "../src/page/system/ping-page";
+﻿import PingPage from "@/page/system/ping-page";
 
 export const dynamic = "force-dynamic";
 

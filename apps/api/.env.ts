@@ -7,12 +7,17 @@ export const apiEnvBindingsSchema = z.object({
   API_BASE_URL: apiBaseUrlEnvSchema,
 });
 
+export type ApiD1Bindings = {
+  DB: D1Database;
+};
+
 export type AppEnv = z.infer<typeof appEnvSchema>;
 export type ApiBaseUrlEnv = z.infer<typeof apiBaseUrlEnvSchema>;
-export type ApiEnvBindings = z.input<typeof apiEnvBindingsSchema>;
+export type ApiEnvVars = z.input<typeof apiEnvBindingsSchema>;
+export type ApiEnvBindings = ApiEnvVars & ApiD1Bindings;
 export type ParsedApiEnvBindings = z.infer<typeof apiEnvBindingsSchema>;
 
-export function getApiEnv(env: ApiEnvBindings): ParsedApiEnvBindings {
+export function getApiEnv(env: ApiEnvVars): ParsedApiEnvBindings {
   return apiEnvBindingsSchema.parse(env);
 }
 

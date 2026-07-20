@@ -16,7 +16,7 @@ import {
   type PingResult,
   type PingResponse,
 } from "@repo/contracts/system";
-import { getApiBaseUrl, getAppEnv, type ApiEnvBindings } from "../../../.env";
+import { getApiBaseUrl, getAppEnv, type ApiEnvBindings } from "/env";
 
 export const systemRoutes = new Hono<{ Bindings: ApiEnvBindings }>()
   .get("/", (c) => {

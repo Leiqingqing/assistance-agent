@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { type ApiEnvBindings } from "../../.env";
+import { type ApiEnvBindings } from "/env";
 import { catalogRoutes } from "./catalog";
 import { orderRoutes } from "./order";
 import { systemRoutes } from "./system";

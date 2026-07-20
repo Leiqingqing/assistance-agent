@@ -1,5 +1,5 @@
 import { healthResponseSchema, type HealthResponse } from "@repo/contracts";
-import { getServerApiBaseUrl } from "../../../.env.server";
+import { getServerApiBaseUrl } from "@env.server";
 
 export interface HealthCheck {
   url: string;

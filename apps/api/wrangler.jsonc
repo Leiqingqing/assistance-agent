@@ -8,6 +8,14 @@
   },
   "env": {
     "development": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "ai-agent-local-auth",
+          "database_id": "ai-agent-local-auth",
+          "migrations_dir": "migrations"
+        }
+      ],
       "vars": {
         "APP_ENV": "development",
       }
