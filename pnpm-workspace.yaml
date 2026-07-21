@@ -23,6 +23,7 @@ catalog:
   "eslint-plugin-turbo": "^2.7.1"
   "globals": "^16.5.0"
   "hono": "^4.12.15"
+  "jose": "^6.2.3"
   "next": "16.2.0"
   "prettier": "^3.7.4"
   "react": "^19.2.0"
