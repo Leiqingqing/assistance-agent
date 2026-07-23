@@ -1,3 +1,4 @@
+export * from "./adminPasswordLogin";
 export * from "./error";
 export * from "./methods";
 export * from "./password";
