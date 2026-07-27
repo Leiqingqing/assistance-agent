@@ -17,7 +17,7 @@ import type {
   InsertRefreshTokenInput,
   MakeRefreshTokenUsedInput,
   RecordPasswordLoginFailureInput,
-  RefreshTokenClaims,
+  RevokeSessionInput,
   UpdateRefreshTokenRotationInput,
 } from "./types";
 
@@ -195,12 +195,12 @@ export const insertRefreshToken = async (
 
 export const findAdminTokenRefleshRecord = async (
   db: Db,
-  claims: RefreshTokenClaims,
+  tokenHash: string,
+  sessionId: string,
 ): Promise<AdminTokenRefleshRecord | null> => {
   const [record] = await db
     .select({
       refreshTokenId: refreshTokens.id,
-      tokenHash: refreshTokens.tokenHash,
       tokenExpiresAtMs: refreshTokens.expiresAtMs,
       tokenUsedAtMs: refreshTokens.usedAtMs,
       tokenRevokedAtMs: refreshTokens.revokedAtMs,
@@ -210,16 +210,6 @@ export const findAdminTokenRefleshRecord = async (
       applicationId: authSessions.applicationId,
       applicationCode: applications.code,
       applicationStatus: applications.status,
-      latestRefreshTokenId: sql<string | null>`(
-        SELECT latest.id
-        FROM refresh_tokens AS latest
-        WHERE latest.session_id = ${refreshTokens.sessionId}
-          AND latest.used_at_ms IS NULL
-          AND latest.revoked_at_ms IS NULL
-          AND latest.reuse_detected_at_ms IS NULL
-        ORDER BY latest.created_at_ms DESC, latest.id DESC
-        LIMIT 1
-      )`,
       sessionExpiresAtMs: authSessions.expiresAtMs,
       sessionRevokedAtMs: authSessions.revokedAtMs,
     })
@@ -228,10 +218,8 @@ export const findAdminTokenRefleshRecord = async (
     .innerJoin(applications, eq(applications.id, authSessions.applicationId))
     .where(
       and(
-        eq(refreshTokens.id, claims.jti),
-        eq(authSessions.id, claims.sid),
-        eq(authSessions.userId, claims.sub),
-        eq(authSessions.applicationId, claims.appId),
+        eq(refreshTokens.tokenHash, tokenHash),
+        eq(authSessions.id, sessionId),
       ),
     )
     .limit(1);
@@ -309,4 +297,30 @@ export const updateRefreshTokenRotation = async (
       lastSeenAtMs: input.nowMs,
     })
     .where(eq(authSessions.id, input.sessionId));
+};
+
+export const revokeSession = async (
+  db: Db,
+  input: RevokeSessionInput,
+): Promise<void> => {
+  await db.batch([
+    db
+      .update(authSessions)
+      .set({ revokedAtMs: input.revokedAtMs })
+      .where(
+        and(
+          eq(authSessions.id, input.sessionId),
+          isNull(authSessions.revokedAtMs),
+        ),
+      ),
+    db
+      .update(refreshTokens)
+      .set({ revokedAtMs: input.revokedAtMs })
+      .where(
+        and(
+          eq(refreshTokens.sessionId, input.sessionId),
+          isNull(refreshTokens.revokedAtMs),
+        ),
+      ),
+  ]);
 };

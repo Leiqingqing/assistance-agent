@@ -35,7 +35,12 @@ export const handleAdminTokenReflesh = async (
   }).catch(() => {
     throw refreshTokenInvalidError();
   });
-  const currentToken = await findAdminTokenRefleshRecord(db, claims);
+  const tokenHash = await sha256Hex(refreshToken);
+  const currentToken = await findAdminTokenRefleshRecord(
+    db,
+    tokenHash,
+    claims.sid,
+  );
 
   if (
     currentToken === null ||
@@ -54,10 +59,7 @@ export const handleAdminTokenReflesh = async (
     throw sessionRevokedError();
   }
 
-  const tokenHash = await sha256Hex(refreshToken);
-
   if (
-    currentToken.tokenHash !== tokenHash ||
     currentToken.tokenExpiresAtMs <= nowMs ||
     currentToken.tokenRevokedAtMs !== null
   ) {
@@ -66,8 +68,7 @@ export const handleAdminTokenReflesh = async (
 
   if (
     currentToken.tokenUsedAtMs !== null ||
-    currentToken.tokenReuseDetectedAtMs !== null ||
-    currentToken.latestRefreshTokenId !== currentToken.refreshTokenId
+    currentToken.tokenReuseDetectedAtMs !== null 
   ) {
     throw refreshTokenReplayedError();
   }

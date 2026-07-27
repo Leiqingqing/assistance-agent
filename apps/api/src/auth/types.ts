@@ -72,7 +72,6 @@ export interface InsertRefreshTokenInput {
 
 export interface AdminTokenRefleshRecord {
   refreshTokenId: string;
-  tokenHash: string;
   tokenExpiresAtMs: number;
   tokenUsedAtMs: number | null;
   tokenRevokedAtMs: number | null;
@@ -82,7 +81,6 @@ export interface AdminTokenRefleshRecord {
   applicationId: string;
   applicationCode: string;
   applicationStatus: string;
-  latestRefreshTokenId: string | null;
   sessionExpiresAtMs: number;
   sessionRevokedAtMs: number | null;
 }
@@ -99,8 +97,15 @@ export interface UpdateRefreshTokenRotationInput {
   nowMs: number;
 }
 
+export interface RevokeSessionInput {
+  sessionId: string;
+  revokedAtMs: number;
+}
+
+
 export type AdminPasswordLoginResult = AdminPasswordLoginResponse;
 export type AdminTokenRefleshResult = AdminTokenRefleshResponse;
+
 
 export type AdminPasswordLoginService = (
   context: Context<{ Bindings: ApiEnvBindings }>,
