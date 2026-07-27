@@ -1,6 +1,7 @@
 import type {
-  AccessTokenResult,
   AdminPasswordLoginRequest,
+  AdminPasswordLoginResponse,
+  AdminTokenRefleshResponse,
 } from "@repo/contracts/auth";
 import type { Context } from "hono";
 import type { ApiEnvBindings } from "/env";
@@ -69,15 +70,44 @@ export interface InsertRefreshTokenInput {
   refreshTokenExpiresAtMs: number;
 }
 
-export type AdminPasswordLoginResult = AccessTokenResult & {
-  refreshToken: string;
-  refreshTokenJti: string;
-  refreshTokenExpiresAtMs: number;
-  refreshTokenTtlSec: number;
-  session: SessionContext;
-};
+export interface AdminTokenRefleshRecord {
+  refreshTokenId: string;
+  tokenHash: string;
+  tokenExpiresAtMs: number;
+  tokenUsedAtMs: number | null;
+  tokenRevokedAtMs: number | null;
+  tokenReuseDetectedAtMs: number | null;
+  sessionId: string;
+  userId: string;
+  applicationId: string;
+  applicationCode: string;
+  applicationStatus: string;
+  latestRefreshTokenId: string | null;
+  sessionExpiresAtMs: number;
+  sessionRevokedAtMs: number | null;
+}
+
+export interface MakeRefreshTokenUsedInput {
+  refreshTokenId: string;
+  usedAtMs: number;
+}
+
+export interface UpdateRefreshTokenRotationInput {
+  sessionId: string;
+  previousRefreshTokenId: string;
+  replacementRefreshTokenId: string;
+  nowMs: number;
+}
+
+export type AdminPasswordLoginResult = AdminPasswordLoginResponse;
+export type AdminTokenRefleshResult = AdminTokenRefleshResponse;
 
 export type AdminPasswordLoginService = (
   context: Context<{ Bindings: ApiEnvBindings }>,
   request: AdminPasswordLoginRequest,
 ) => Promise<AdminPasswordLoginResult>;
+
+export type AdminTokenRefleshService = (
+  context: Context<{ Bindings: ApiEnvBindings }>,
+  refreshToken: string,
+) => Promise<AdminTokenRefleshResult>;

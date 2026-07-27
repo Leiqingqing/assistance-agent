@@ -4,4 +4,3 @@ ACCESS_TOKEN_SECRET=replace-with-at-least-32-characters
 REFRESH_TOKEN_SECRET=replace-with-another-32-character-secret
 ACCESS_TOKEN_TTL_SEC=900
 REFRESH_TOKEN_TTL_SEC=2592000
-REFRESH_TOKEN_COOKIE_NAME=admin_refresh_token

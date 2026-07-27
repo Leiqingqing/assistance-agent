@@ -1,4 +1,4 @@
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import type { Db } from "@/db/client";
 import {
   applicationAuthMethods,
@@ -12,9 +12,13 @@ import {
 import type {
   AdminPasswordLoginAccountRecord,
   AdminPasswordLoginPolicyRecord,
+  AdminTokenRefleshRecord,
   CreateAuthSessionInput,
   InsertRefreshTokenInput,
+  MakeRefreshTokenUsedInput,
   RecordPasswordLoginFailureInput,
+  RefreshTokenClaims,
+  UpdateRefreshTokenRotationInput,
 } from "./types";
 
 function parseRoles(value: string): string[] {
@@ -60,9 +64,7 @@ export const findAdminPasswordLoginPolicy = async (
   };
 };
 
-export const canAdminUsePasswordLogin = async (
-  db: Db,
-): Promise<boolean> => {
+export const canAdminUsePasswordLogin = async (db: Db): Promise<boolean> => {
   const policy = await findAdminPasswordLoginPolicy(db);
   return policy?.isPasswordEnabled === true;
 };
@@ -186,8 +188,125 @@ export const insertRefreshToken = async (
     id: input.refreshTokenId,
     sessionId: input.sessionId,
     tokenHash: input.tokenHash,
-    status: "active",
     createdAtMs: input.nowMs,
     expiresAtMs: input.refreshTokenExpiresAtMs,
   });
+};
+
+export const findAdminTokenRefleshRecord = async (
+  db: Db,
+  claims: RefreshTokenClaims,
+): Promise<AdminTokenRefleshRecord | null> => {
+  const [record] = await db
+    .select({
+      refreshTokenId: refreshTokens.id,
+      tokenHash: refreshTokens.tokenHash,
+      tokenExpiresAtMs: refreshTokens.expiresAtMs,
+      tokenUsedAtMs: refreshTokens.usedAtMs,
+      tokenRevokedAtMs: refreshTokens.revokedAtMs,
+      tokenReuseDetectedAtMs: refreshTokens.reuseDetectedAtMs,
+      sessionId: authSessions.id,
+      userId: authSessions.userId,
+      applicationId: authSessions.applicationId,
+      applicationCode: applications.code,
+      applicationStatus: applications.status,
+      latestRefreshTokenId: sql<string | null>`(
+        SELECT latest.id
+        FROM refresh_tokens AS latest
+        WHERE latest.session_id = ${refreshTokens.sessionId}
+          AND latest.used_at_ms IS NULL
+          AND latest.revoked_at_ms IS NULL
+          AND latest.reuse_detected_at_ms IS NULL
+        ORDER BY latest.created_at_ms DESC, latest.id DESC
+        LIMIT 1
+      )`,
+      sessionExpiresAtMs: authSessions.expiresAtMs,
+      sessionRevokedAtMs: authSessions.revokedAtMs,
+    })
+    .from(refreshTokens)
+    .innerJoin(authSessions, eq(authSessions.id, refreshTokens.sessionId))
+    .innerJoin(applications, eq(applications.id, authSessions.applicationId))
+    .where(
+      and(
+        eq(refreshTokens.id, claims.jti),
+        eq(authSessions.id, claims.sid),
+        eq(authSessions.userId, claims.sub),
+        eq(authSessions.applicationId, claims.appId),
+      ),
+    )
+    .limit(1);
+
+  return record ?? null;
+};
+
+export const findActiveAdminRoles = async (
+  db: Db,
+  userId: string,
+  applicationId: string,
+): Promise<string[]> => {
+  const adminRolesJson = sql<string>`(
+    SELECT COALESCE(json_group_array(role.code), '[]')
+    FROM user_role_bindings AS binding
+    INNER JOIN roles AS role
+      ON role.id = binding.role_id
+     AND role.status = 'active'
+     AND role.deleted_at_ms IS NULL
+    WHERE binding.user_id = ${users.id}
+      AND binding.application_id = ${applicationId}
+      AND role.application_id = ${applicationId}
+      AND binding.revoked_at_ms IS NULL
+  )`;
+  const [record] = await db
+    .select({ adminRolesJson })
+    .from(users)
+    .where(
+      and(
+        eq(users.id, userId),
+        eq(users.status, "active"),
+        isNull(users.deletedAtMs),
+      ),
+    )
+    .limit(1);
+
+  return record === undefined ? [] : parseRoles(record.adminRolesJson);
+};
+
+export const makeUsed = async (
+  db: Db,
+  input: MakeRefreshTokenUsedInput,
+): Promise<boolean> => {
+  const claimedTokens = await db
+    .update(refreshTokens)
+    .set({
+      usedAtMs: input.usedAtMs,
+    })
+    .where(
+      and(
+        eq(refreshTokens.id, input.refreshTokenId),
+        isNull(refreshTokens.usedAtMs),
+        isNull(refreshTokens.revokedAtMs),
+        isNull(refreshTokens.reuseDetectedAtMs),
+        gt(refreshTokens.expiresAtMs, input.usedAtMs),
+      ),
+    )
+    .returning({ id: refreshTokens.id });
+
+  return claimedTokens.length === 1;
+};
+
+export const updateRefreshTokenRotation = async (
+  db: Db,
+  input: UpdateRefreshTokenRotationInput,
+): Promise<void> => {
+  await db
+    .update(refreshTokens)
+    .set({ replacedByTokenId: input.replacementRefreshTokenId })
+    .where(eq(refreshTokens.id, input.previousRefreshTokenId));
+
+  await db
+    .update(authSessions)
+    .set({
+      lastSeenAtMs: input.nowMs,
+    })
+    .where(eq(authSessions.id, input.sessionId));
 };

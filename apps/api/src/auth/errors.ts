@@ -81,3 +81,39 @@ export function passwordLockedError(): AppError<AuthError> {
     "PASSWORD_LOCKED",
   );
 }
+
+export function refreshTokenInvalidError(): AppError<AuthError> {
+  return createAuthError(
+    BizCode.AUTH_UNAUTHORIZED,
+    "Refresh token is invalid",
+    401,
+    "REFRESH_TOKEN_INVALID",
+  );
+}
+
+export function sessionRevokedError(): AppError<AuthError> {
+  return createAuthError(
+    BizCode.AUTH_UNAUTHORIZED,
+    "Session has been revoked",
+    401,
+    "SESSION_REVOKED",
+  );
+}
+
+export function refreshTokenReplayedError(): AppError<AuthError> {
+  return createAuthError(
+    BizCode.AUTH_UNAUTHORIZED,
+    "Refresh token has already been used",
+    401,
+    "REFRESH_TOKEN_REUSED",
+  );
+}
+
+export function adminRoleRequiredError(): AppError<AuthError> {
+  return createAuthError(
+    BizCode.AUTH_FORBIDDEN,
+    "An active admin role is required",
+    403,
+    "ADMIN_ROLE_REQUIRED",
+  );
+}

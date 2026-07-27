@@ -6,6 +6,7 @@ export interface AuthError {
 }
 
 export type AuthErrorReason =
+  | "ADMIN_ROLE_REQUIRED"
   | "APPLICATION_NOT_FOUND"
   | "AUTH_METHOD_DISABLED"
   | "EMAIL_LOGIN_DISABLED"
@@ -20,6 +21,7 @@ export type AuthErrorReason =
   | "USER_DISABLED";
 
 export const authErrorReasonSchema = z.enum([
+  "ADMIN_ROLE_REQUIRED",
   "APPLICATION_NOT_FOUND",
   "AUTH_METHOD_DISABLED",
   "EMAIL_LOGIN_DISABLED",

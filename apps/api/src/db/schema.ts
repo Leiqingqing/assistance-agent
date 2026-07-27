@@ -1,14 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const refreshTokenStatuses = [
-  "active",
-  "used",
-  "revoked",
-  "compromised",
-] as const;
-
-export type RefreshTokenStatus = (typeof refreshTokenStatuses)[number];
-
 export const applications = sqliteTable("applications", {
   id: text("id").primaryKey(),
   code: text("code").notNull(),
@@ -16,16 +7,13 @@ export const applications = sqliteTable("applications", {
   deletedAtMs: integer("deleted_at_ms"),
 });
 
-export const applicationAuthMethods = sqliteTable(
-  "application_auth_methods",
-  {
-    id: text("id").primaryKey(),
-    applicationId: text("application_id").notNull(),
-    authMethod: text("auth_method").notNull(),
-    isEnabled: integer("is_enabled", { mode: "boolean" }).notNull(),
-    deletedAtMs: integer("deleted_at_ms"),
-  },
-);
+export const applicationAuthMethods = sqliteTable("application_auth_methods", {
+  id: text("id").primaryKey(),
+  applicationId: text("application_id").notNull(),
+  authMethod: text("auth_method").notNull(),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull(),
+  deletedAtMs: integer("deleted_at_ms"),
+});
 
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -62,7 +50,6 @@ export const authSessions = sqliteTable("auth_sessions", {
   authMethod: text("auth_method").notNull(),
   passwordCredentialId: text("password_credential_id"),
   loginEmailId: text("login_email_id"),
-  currentRefreshTokenId: text("current_refresh_token_id"),
   createdAtMs: integer("created_at_ms").notNull(),
   lastSeenAtMs: integer("last_seen_at_ms"),
   expiresAtMs: integer("expires_at_ms").notNull(),
@@ -75,9 +62,10 @@ export const refreshTokens = sqliteTable("refresh_tokens", {
   id: text("id").primaryKey(),
   sessionId: text("session_id").notNull(),
   tokenHash: text("token_hash").notNull(),
-  status: text("status", { enum: refreshTokenStatuses })
-    .notNull()
-    .default("active"),
   createdAtMs: integer("created_at_ms").notNull(),
   expiresAtMs: integer("expires_at_ms").notNull(),
+  usedAtMs: integer("used_at_ms"),
+  revokedAtMs: integer("revoked_at_ms"),
+  replacedByTokenId: text("replaced_by_token_id"),
+  reuseDetectedAtMs: integer("reuse_detected_at_ms"),
 });
