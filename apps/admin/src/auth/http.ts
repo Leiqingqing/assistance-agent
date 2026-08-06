@@ -14,16 +14,11 @@ import {
   clearClientSession,
   readClientSession,
   saveClientSession,
-} from "@app/(auth)/login/hooks/client-sessions";
+} from "@/auth/client-sessions";
 
-type HttpMethod = "GET" | "POST";
 type HttpQueryValue = string | number | boolean;
 type HttpQuery = Record<string, HttpQueryValue | null>;
-type HttpRequestOptions = {
-  init?: AxiosRequestConfig;
-  query?: HttpQuery;
-  payload?: unknown;
-};
+
 
 const ADMIN_TOKEN_REFRESH_PATH = "/auth/admin/token/refresh";
 const ADMIN_TOKEN_REFRESH_PATH_SUFFIX = "/admin/token/refresh";
@@ -70,34 +65,29 @@ function resolveUrl(path: string, query?: HttpQuery) {
 }
 
 function createRequestConfig(
-  method: HttpMethod,
-  options: HttpRequestOptions,
+  url:string,
+  config: AxiosRequestConfig
 ): AxiosRequestConfig {
   const headers = AxiosHeaders.from(
-    options.init?.headers as RawAxiosHeaders | undefined,
+    config?.headers as RawAxiosHeaders | undefined,
   );
   headers.set("accept", "application/json");
 
   const session = readClientSession();
-  if (session !== null && !headers.has("authorization")) {
+  if (session && !headers.has("authorization")) {
     headers.set(
       "authorization",
       `${session.tokenType} ${session.accessToken}`,
     );
   }
 
-  const config: AxiosRequestConfig = {
-    ...options.init,
-    method,
+
+  return  {
+    ...config,
+    url: resolveUrl(url,config.params),
     headers,
     validateStatus: () => true,
-  };
-
-  if (options.payload !== undefined) {
-    config.data = options.payload;
-  }
-
-  return config;
+  };;
 }
 
 function isTokenRefreshPath(path: string): boolean {
@@ -175,27 +165,28 @@ function refreshClientSession(): Promise<boolean> {
 }
 
 async function request<TData>(
-  method: HttpMethod,
-  path: string,
-  options: HttpRequestOptions,
+  config: AxiosRequestConfig
 ): Promise<TData> {
   try {
     const response = await axios<ApiResponse<TData>>(
-      resolveUrl(path, options.query),
-      createRequestConfig(method, options),
+      config
     );
 
-    return unwrapApiResponse(response.data, path);
+    return unwrapApiResponse(response.data,config.url ?? "");
   } catch (e) {
     const error = e as Error & { shouldRefreshed?: boolean };
     if (error.shouldRefreshed ) {
       try {
         await refreshClientSession()
+        const headers = AxiosHeaders.from(config.headers as RawAxiosHeaders | undefined);
+        headers.delete("Authorization");
         const response = await axios<ApiResponse<TData>>(
-          resolveUrl(path, options.query),
-          createRequestConfig(method, options),
+         {
+          ...config,
+          headers
+         }
         );
-        return unwrapApiResponse(response.data, path);
+        return unwrapApiResponse(response.data, config?.url ?? "");
       } catch (e) {
         clearClientSession()
         throw new Error((e as Error)?.message||"Failed to refresh client session");
@@ -213,16 +204,13 @@ async function request<TData>(
 
 export const http = {
   get<TData>(path: string, options: HttpGetOptions = {}) {
-    return request<TData>("GET", path, {
-      init: options.init,
-      query: options.query,
-    });
+    return request<TData>(createRequestConfig(path, { ...options.init,method: "GET",params: options.query }));
   },
   post<TQuery, TData>(
     path: string,
     payload?: TQuery,
     options?: HttpPostOptions,
   ) {
-    return request<TData>("POST", path, { payload, init: options?.init });
+    return request<TData>(createRequestConfig(path, { ...options?.init,method: "POST",data: payload }));
   },
 };
