@@ -1,10 +1,25 @@
 import { Hono } from "hono";
 import { AppError, BizCode, buildFailure, createMeta } from "@repo/contracts/common";
+import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
-import { type ApiEnvBindings } from "/env";
+import { getApiEnv, type ApiEnvBindings } from "/env";
 import routes from "./routes";
 
 const app = new Hono<{ Bindings: ApiEnvBindings }>();
+
+app.use(
+  "*",
+  cors({
+    origin: (origin, c) => {
+      const env = getApiEnv(c.env);
+      return origin === env.ADMIN_ORIGIN || origin === env.WEB_ORIGIN
+        ? origin
+        : undefined;
+    },
+    allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+  }),
+);
 
 app.notFound((c) => {
   const errorMsg = {
