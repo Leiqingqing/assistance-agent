@@ -18,10 +18,10 @@ export function LoginForm() {
       password: "",
     },
   });
-  const { error, isPending, login } = useAdminLogin();
+  const { error, isLogging, submit } = useAdminLogin();
 
   return (
-    <form className="space-y-5" noValidate onSubmit={handleSubmit(login)}>
+    <form className="space-y-5" noValidate onSubmit={handleSubmit(submit)}>
       <div className="space-y-2">
         <Label htmlFor="email">邮箱</Label>
         <Input
@@ -32,7 +32,7 @@ export function LoginForm() {
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "email-error" : undefined}
           placeholder="admin@example.com"
-          disabled={isPending}
+          disabled={isLogging}
           {...register("email", {
             required: "请输入邮箱",
             pattern: {
@@ -57,7 +57,7 @@ export function LoginForm() {
           aria-invalid={Boolean(errors.password)}
           aria-describedby={errors.password ? "password-error" : undefined}
           placeholder="请输入密码"
-          disabled={isPending}
+          disabled={isLogging}
           {...register("password", {
             required: "请输入密码",
           })}
@@ -78,8 +78,8 @@ export function LoginForm() {
         </div>
       )}
 
-      <Button className="w-full" size="lg" type="submit" disabled={isPending}>
-        {isPending ? "登录中..." : "登录"}
+      <Button className="w-full" size="lg" type="submit" disabled={isLogging}>
+        {isLogging ? "登录中..." : "登录"}
       </Button>
     </form>
   );
