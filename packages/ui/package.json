@@ -4,6 +4,7 @@
   "private": true,
   "exports": {
     "./field": "./src/components/ui/field.tsx",
+    "./tailwind-proof": "./src/tailwind-proof.tsx",
     "./styles.css": "./src/styles.css",
     "./themes": "./src/themes.ts",
     "./*": "./src/components/ui/*.tsx"
