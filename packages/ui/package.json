@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "exports": {
+    "./field": "./src/components/ui/field.tsx",
     "./styles.css": "./src/styles.css",
     "./themes": "./src/themes.ts",
-    "./*": "./src/*.tsx"
+    "./*": "./src/components/ui/*.tsx"
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
