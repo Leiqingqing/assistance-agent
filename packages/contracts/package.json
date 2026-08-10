@@ -9,6 +9,7 @@
     "./catalog": "./src/catalog/index.ts",
     "./common": "./src/common/index.ts",
     "./order": "./src/order/index.ts",
+    "./role": "./src/role/index.ts",
     "./system": "./src/system/index.ts",
     "./user": "./src/user/index.ts"
   },
