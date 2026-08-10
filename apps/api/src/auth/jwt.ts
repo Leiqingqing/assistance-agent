@@ -30,6 +30,7 @@ export async function signAccessToken(
   const jwt = new SignJWT({
     sid: params.claims.sid,
     appId: params.claims.appId,
+    roles: params.claims.roles,
   })
     .setProtectedHeader({ alg: JWT_ALGORITHM, typ: "JWT" })
     .setSubject(params.claims.sub)
@@ -37,6 +38,36 @@ export async function signAccessToken(
     .setExpirationTime(nowSec + params.ttlSec);
 
   return jwt.sign(toSecret(params.secret));
+}
+
+export async function verifyAccessToken(
+  params: {
+    token: string;
+    secret: string;
+  },
+): Promise<AccessTokenClaims> {
+  const { payload } = await jwtVerify(params.token, toSecret(params.secret));
+  const sub = payload.sub;
+  const sid = payload.sid;
+  const appId = payload.appId;
+  const roles = payload.roles;
+
+  if (
+    typeof sub !== "string" ||
+    typeof sid !== "string" ||
+    typeof appId !== "string" ||
+    !Array.isArray(roles) ||
+    !roles.every((role) => typeof role === "string")
+  ) {
+    throw new Error("Invalid access token claims");
+  }
+
+  return {
+    sub,
+    sid,
+    appId,
+    roles,
+  };
 }
 
 export async function signRefreshToken(
@@ -108,6 +139,7 @@ export async function issueAdminTokenPair(
       sub: params.claims.userId,
       sid: params.claims.sessionId,
       appId: params.claims.applicationId,
+      roles: params.claims.roles,
     },
     ttlSec: params.accessTtlSec,
   });

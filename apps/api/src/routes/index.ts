@@ -5,11 +5,13 @@ import { orderRoutes } from "./order";
 import { systemRoutes } from "./system";
 import { userRoutes } from "./user";
 import adminAuthRoute from "./auth/admin.route";
+import { roleRoutes } from "./role/manage-role.route";
 
 const routes = new Hono<{ Bindings: ApiEnvBindings }>()
   .route("/", systemRoutes)
   .route("/auth", adminAuthRoute)
   .route("/catalog", catalogRoutes)
+  .route("/rpc/role", roleRoutes)
   .route("/user", userRoutes)
   .route("/order", orderRoutes);
 

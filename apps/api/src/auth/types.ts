@@ -13,7 +13,12 @@ export interface RefreshTokenClaims {
   jti: string;
 }
 
-export type AccessTokenClaims = Omit<RefreshTokenClaims, "jti">;
+export interface AccessTokenClaims {
+  sub: string;
+  sid: string;
+  appId: string;
+  roles: string[];
+}
 
 export interface SessionContext {
   userId: string;

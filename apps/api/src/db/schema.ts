@@ -7,6 +7,22 @@ export const applications = sqliteTable("applications", {
   deletedAtMs: integer("deleted_at_ms"),
 });
 
+export const roles = sqliteTable("roles", {
+  id: text("id").primaryKey(),
+  applicationId: text("application_id").notNull(),
+  code: text("code").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: text("status", {
+    enum: ["active", "disabled", "deleted"],
+  }).notNull(),
+  createdAtMs: integer("created_at_ms").notNull(),
+  updatedAtMs: integer("updated_at_ms").notNull(),
+  activeAtMs: integer("active_at_ms").notNull(),
+  disableAtMs: integer("disable_at_ms"),
+  deletedAtMs: integer("deleted_at_ms"),
+});
+
 export const applicationAuthMethods = sqliteTable("application_auth_methods", {
   id: text("id").primaryKey(),
   applicationId: text("application_id").notNull(),

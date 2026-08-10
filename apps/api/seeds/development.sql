@@ -70,6 +70,46 @@ INSERT OR IGNORE INTO user_emails (
   1760000000000
 );
 
+INSERT OR IGNORE INTO roles (
+  id,
+  application_id,
+  code,
+  name,
+  description,
+  status,
+  created_at_ms,
+  updated_at_ms,
+  active_at_ms
+) VALUES (
+  'role_admin_owner',
+  'app_admin',
+  'admin_owner',
+  'Admin Owner',
+  'Protected role for role administration',
+  'active',
+  1760000000000,
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO user_role_bindings (
+  id,
+  user_id,
+  role_id,
+  application_id,
+  granted_at_ms,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'binding_admin_owner_role',
+  'user_admin',
+  'role_admin_owner',
+  'app_admin',
+  1760000000000,
+  1760000000000,
+  1760000000000
+);
+
 UPDATE users
 SET primary_email_id = 'email_admin'
 WHERE id = 'user_admin';
@@ -101,13 +141,15 @@ INSERT OR IGNORE INTO roles (
   name,
   status,
   created_at_ms,
-  updated_at_ms
+  updated_at_ms,
+  active_at_ms
 ) VALUES (
   'role_admin',
   'app_admin',
   'admin',
   'Administrator',
   'active',
+  1760000000000,
   1760000000000,
   1760000000000
 );

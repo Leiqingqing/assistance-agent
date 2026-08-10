@@ -117,3 +117,21 @@ export function adminRoleRequiredError(): AppError<AuthError> {
     "ADMIN_ROLE_REQUIRED",
   );
 }
+
+export function accessTokenInvalidError(): AppError<AuthError> {
+  return createAuthError(
+    BizCode.AUTH_UNAUTHORIZED,
+    "Access token is invalid",
+    401,
+    "ACCESS_TOKEN_INVALID",
+  );
+}
+
+export function adminOwnerRequiredError(): AppError<AuthError> {
+  return createAuthError(
+    BizCode.AUTH_FORBIDDEN,
+    "The admin_owner role is required",
+    403,
+    "ADMIN_OWNER_REQUIRED",
+  );
+}
