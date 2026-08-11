@@ -6,7 +6,7 @@ import {
 } from "@/auth/errors";
 import { verifyAccessToken } from "@/auth/jwt";
 
-const ADMIN_OWNER_ROLE = "admin_owner";
+const ADMIN_OWNER_ROLE = "admin";
 
 export const requireRole = createMiddleware<{
   Bindings: ApiEnvBindings;

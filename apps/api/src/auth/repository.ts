@@ -239,7 +239,7 @@ export const findActiveAdminRoles = async (
       ON role.id = binding.role_id
      AND role.status = 'active'
      AND role.deleted_at_ms IS NULL
-    WHERE binding.user_id = ${users.id}
+    WHERE binding.user_id = ${userId}
       AND binding.application_id = ${applicationId}
       AND role.application_id = ${applicationId}
       AND binding.revoked_at_ms IS NULL

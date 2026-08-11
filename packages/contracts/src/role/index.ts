@@ -2,11 +2,17 @@ import { z } from "zod";
 
 export const RoleStatusSchema = z.enum(["active", "disabled", "deleted"]);
 export type RoleStatus = z.infer<typeof RoleStatusSchema>;
+const RoleCodeSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z][a-z0-9_]*$/);
 
 export const RoleSchema = z.object({
   id: z.string().min(1),
   applicationId: z.string().min(1),
-  code: z.string().min(1),
+  code: RoleCodeSchema,
   name: z.string().min(1),
   description: z.string().nullable(),
   status: RoleStatusSchema,
@@ -18,18 +24,11 @@ export const RoleSchema = z.object({
 });
 export type Role = z.infer<typeof RoleSchema>;
 
-const RoleCodeSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(64)
-  .regex(/^[a-z][a-z0-9_]*$/);
-
-export const CreateRoleRequestSchema = z.object({
-  applicationId: z.string().min(1),
-  code: RoleCodeSchema,
-  name: z.string().trim().min(1).max(100),
-  description: z.string().trim().max(500).nullable().optional(),
+export const CreateRoleRequestSchema = RoleSchema.pick({
+  applicationId: true,
+  code: true,
+  name: true,
+  description: true,
 });
 export type CreateRoleRequest = z.infer<typeof CreateRoleRequestSchema>;
 
