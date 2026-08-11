@@ -68,8 +68,9 @@ function createRequestConfig(
   url:string,
   config: AxiosRequestConfig
 ): AxiosRequestConfig {
+  const { params, ...requestConfig } = config;
   const headers = AxiosHeaders.from(
-    config?.headers as RawAxiosHeaders | undefined,
+    requestConfig.headers as RawAxiosHeaders | undefined,
   );
   headers.set("accept", "application/json");
 
@@ -82,12 +83,12 @@ function createRequestConfig(
   }
 
 
-  return  {
-    ...config,
-    url: resolveUrl(url,config.params),
+  return {
+    ...requestConfig,
+    url: resolveUrl(url, params),
     headers,
     validateStatus: () => true,
-  };;
+  };
 }
 
 function isTokenRefreshPath(path: string): boolean {
