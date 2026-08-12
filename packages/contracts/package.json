@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./auth": "./src/auth/index.ts",
     "./catalog": "./src/catalog/index.ts",
+    "./chat": "./src/chat/index.ts",
     "./common": "./src/common/index.ts",
     "./order": "./src/order/index.ts",
     "./role": "./src/role/index.ts",

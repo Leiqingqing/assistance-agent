@@ -8,18 +8,13 @@ export const apiEnvBindingsSchema = z.object({
   API_BASE_URL: z.string().url(),
   ACCESS_TOKEN_SECRET: z.string().min(32),
   REFRESH_TOKEN_SECRET: z.string().min(32),
-  ACCESS_TOKEN_TTL_SEC: z
-  .string()
-  .regex(/^\d+$/)
-  .transform(Number)
-  .pipe(z.number().int().positive()),
-  REFRESH_TOKEN_TTL_SEC: z
-  .string()
-  .regex(/^\d+$/)
-  .transform(Number)
-  .pipe(z.number().int().positive()),
+  ACCESS_TOKEN_TTL_SEC: z.coerce.number().int().positive(),
+  REFRESH_TOKEN_TTL_SEC: z.coerce.number().int().positive(),
   ADMIN_ORIGIN: z.string().url(),
   WEB_ORIGIN: z.string().url(),
+  DEEPSEEK_API_KEY: z.string().min(1).optional(),
+  DEEPSEEK_BASE_URL: z.string().url().optional(),
+  DEEPSEEK_MODEL: z.string().min(1).optional(),
 });
 
 export type ApiD1Bindings = {

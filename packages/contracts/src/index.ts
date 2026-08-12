@@ -5,3 +5,4 @@ export * from "./order";
 export * from "./role";
 export * from "./system";
 export * from "./user";
+export * from "./chat";

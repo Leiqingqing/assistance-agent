@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { type ApiEnvBindings } from "/env";
 import { catalogRoutes } from "./catalog";
+import { chatRoutes } from "./chat";
 import { orderRoutes } from "./order";
 import { systemRoutes } from "./system";
 import { userRoutes } from "./user";
@@ -11,6 +12,7 @@ const routes = new Hono<{ Bindings: ApiEnvBindings }>()
   .route("/", systemRoutes)
   .route("/auth", adminAuthRoute)
   .route("/catalog", catalogRoutes)
+  .route("/chat", chatRoutes)
   .route("/rpc/role", roleRoutes)
   .route("/user", userRoutes)
   .route("/order", orderRoutes);
