@@ -124,7 +124,7 @@ export async function verifyRefreshToken(
   };
 }
 
-export async function issueAdminTokenPair(
+export async function issueTokenPair(
   params:{
     claims: SessionContext,
     accessTokenSecret: string,
@@ -160,3 +160,5 @@ export async function issueAdminTokenPair(
     refreshTokenJti: refreshTokenResult.jti,
   };
 }
+
+export const issueAdminTokenPair = issueTokenPair;

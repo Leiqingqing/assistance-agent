@@ -28,8 +28,9 @@ function parseRoles(value: string): string[] {
     : [];
 }
 
-export const findAdminPasswordLoginPolicy = async (
+const findPasswordLoginPolicy = async (
   db: Db,
+  applicationCode: string,
 ): Promise<AdminPasswordLoginPolicyRecord | null> => {
   const [record] = await db
     .select({
@@ -47,7 +48,7 @@ export const findAdminPasswordLoginPolicy = async (
     )
     .where(
       and(
-        eq(applications.code, "admin"),
+        eq(applications.code, applicationCode),
         eq(applications.status, "active"),
         isNull(applications.deletedAtMs),
       ),
@@ -64,14 +65,21 @@ export const findAdminPasswordLoginPolicy = async (
   };
 };
 
+export const findAdminPasswordLoginPolicy = (db: Db) =>
+  findPasswordLoginPolicy(db, "admin");
+
+export const findWebPasswordLoginPolicy = (db: Db) =>
+  findPasswordLoginPolicy(db, "web");
+
 export const canAdminUsePasswordLogin = async (db: Db): Promise<boolean> => {
   const policy = await findAdminPasswordLoginPolicy(db);
   return policy?.isPasswordEnabled === true;
 };
 
-export const findAdminPasswordLoginAccount = async (
+const findPasswordLoginAccount = async (
   db: Db,
   normalizedEmail: string,
+  applicationCode: string,
 ): Promise<AdminPasswordLoginAccountRecord | null> => {
   const adminRolesJson = sql<string>`(
     SELECT COALESCE(json_group_array(role.code), '[]')
@@ -108,7 +116,7 @@ export const findAdminPasswordLoginAccount = async (
     .innerJoin(
       applications,
       and(
-        eq(applications.code, "admin"),
+        eq(applications.code, applicationCode),
         eq(applications.status, "active"),
         isNull(applications.deletedAtMs),
       ),
@@ -142,6 +150,16 @@ export const findAdminPasswordLoginAccount = async (
   };
 };
 
+export const findAdminPasswordLoginAccount = (
+  db: Db,
+  normalizedEmail: string,
+) => findPasswordLoginAccount(db, normalizedEmail, "admin");
+
+export const findWebPasswordLoginAccount = (
+  db: Db,
+  normalizedEmail: string,
+) => findPasswordLoginAccount(db, normalizedEmail, "web");
+
 export const recordPasswordLoginFailure = async (
   db: Db,
   input: RecordPasswordLoginFailureInput,
@@ -161,7 +179,7 @@ export const recordPasswordLoginFailure = async (
     );
 };
 
-export const createAdminPasswordLoginSession = async (
+export const createPasswordLoginSession = async (
   db: Db,
   input: CreateAuthSessionInput,
 ): Promise<void> => {
@@ -180,6 +198,9 @@ export const createAdminPasswordLoginSession = async (
   });
 };
 
+export const createAdminPasswordLoginSession = createPasswordLoginSession;
+export const createWebPasswordLoginSession = createPasswordLoginSession;
+
 export const insertRefreshToken = async (
   db: Db,
   input: InsertRefreshTokenInput,
@@ -193,7 +214,7 @@ export const insertRefreshToken = async (
   });
 };
 
-export const findAdminTokenRefleshRecord = async (
+const findTokenRefreshRecord = async (
   db: Db,
   tokenHash: string,
   sessionId: string,
@@ -227,7 +248,10 @@ export const findAdminTokenRefleshRecord = async (
   return record ?? null;
 };
 
-export const findActiveAdminRoles = async (
+export const findAdminTokenRefleshRecord = findTokenRefreshRecord;
+export const findWebTokenRefreshRecord = findTokenRefreshRecord;
+
+const findActiveRoles = async (
   db: Db,
   userId: string,
   applicationId: string,
@@ -258,6 +282,9 @@ export const findActiveAdminRoles = async (
 
   return record === undefined ? [] : parseRoles(record.adminRolesJson);
 };
+
+export const findActiveAdminRoles = findActiveRoles;
+export const findActiveWebRoles = findActiveRoles;
 
 export const makeUsed = async (
   db: Db,

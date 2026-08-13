@@ -10,19 +10,23 @@ function createAuthError(
   return new AppError<AuthError>(code, message, status, { reason });
 }
 
-export function applicationNotFoundError(): AppError<AuthError> {
+export function applicationNotFoundError(
+  applicationName = "Admin",
+): AppError<AuthError> {
   return createAuthError(
     BizCode.AUTH_UNAUTHORIZED,
-    "Admin application is unavailable",
+    `${applicationName} application is unavailable`,
     401,
     "APPLICATION_NOT_FOUND",
   );
 }
 
-export function authMethodDisabledError(): AppError<AuthError> {
+export function authMethodDisabledError(
+  applicationName = "admin",
+): AppError<AuthError> {
   return createAuthError(
     BizCode.AUTH_FORBIDDEN,
-    "Password login is disabled for the admin application",
+    `Password login is disabled for the ${applicationName} application`,
     403,
     "AUTH_METHOD_DISABLED",
   );

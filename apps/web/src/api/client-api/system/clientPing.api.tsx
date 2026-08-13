@@ -1,10 +1,10 @@
 import {
-  type PingError,
+  ApiSuccess,
   type PingRequest,
   type PingResponse,
   type PingResult,
 } from "@repo/contracts";
-import { http } from "@/api/http";
+import { http } from "@/auth/http"
 
 export function createClientPingRequest(): PingRequest {
   return {
@@ -17,5 +17,5 @@ export function createClientPingRequest(): PingRequest {
 export async function postClientSystemPing(
   request: PingRequest,
 ): Promise<PingResponse> {
-  return http.post<PingRequest, PingResult, PingError>("/ping", request);
+  return http.post<PingRequest, ApiSuccess<PingResult>>("/ping", request);
 }

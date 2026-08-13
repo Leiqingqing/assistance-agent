@@ -1,6 +1,9 @@
 -- Local development admin:
 --   email: admin@example.com
 --   password: Admin123!
+-- Local development web user:
+--   email: user@example.com
+--   password: Web123!
 
 INSERT OR IGNORE INTO applications (
   id,
@@ -30,6 +33,138 @@ INSERT OR IGNORE INTO application_auth_methods (
   'app_admin',
   'password',
   1,
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO applications (
+  id,
+  code,
+  name,
+  status,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'app_web',
+  'web',
+  'Web',
+  'active',
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO application_auth_methods (
+  id,
+  application_id,
+  auth_method,
+  is_enabled,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'app_auth_web_password',
+  'app_web',
+  'password',
+  1,
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO users (
+  id,
+  display_name,
+  status,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'user_web',
+  'Local Web User',
+  'active',
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO user_emails (
+  id,
+  user_id,
+  email,
+  email_normalized,
+  is_verified,
+  is_login_enabled,
+  verified_at_ms,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'email_web',
+  'user_web',
+  'user@example.com',
+  'user@example.com',
+  1,
+  1,
+  1760000000000,
+  1760000000000,
+  1760000000000
+);
+
+UPDATE users
+SET primary_email_id = 'email_web'
+WHERE id = 'user_web';
+
+INSERT OR IGNORE INTO password_credentials (
+  id,
+  user_id,
+  password_hash,
+  password_algo,
+  password_updated_at_ms,
+  failed_attempt_count,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'password_web',
+  'user_web',
+  'd2ViLWxvY2FsLXNlZWQhIQ==$3hThApr8GXGwwo7hcoMS9ODbDPN8jCdVKDdpdK3k0bg=',
+  'sha256',
+  1760000000000,
+  0,
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO roles (
+  id,
+  application_id,
+  code,
+  name,
+  description,
+  status,
+  created_at_ms,
+  updated_at_ms,
+  active_at_ms
+) VALUES (
+  'role_web_user',
+  'app_web',
+  'user',
+  'Web User',
+  'Default role for the web application',
+  'active',
+  1760000000000,
+  1760000000000,
+  1760000000000
+);
+
+INSERT OR IGNORE INTO user_role_bindings (
+  id,
+  user_id,
+  role_id,
+  application_id,
+  granted_at_ms,
+  created_at_ms,
+  updated_at_ms
+) VALUES (
+  'binding_web_user_role',
+  'user_web',
+  'role_web_user',
+  'app_web',
+  1760000000000,
   1760000000000,
   1760000000000
 );
