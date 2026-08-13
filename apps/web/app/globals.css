@@ -1,6 +1,12 @@
 @import "@repo/ui/styles.css";
+@import "streamdown/styles.css";
 
 @source "../**/*.{ts,tsx}";
+@source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/@streamdown/cjk/dist/*.js";
+@source "../node_modules/@streamdown/code/dist/*.js";
+@source "../node_modules/@streamdown/math/dist/*.js";
+@source "../node_modules/@streamdown/mermaid/dist/*.js";
 
 :root {
   --background: var(--color-surface-page);
@@ -43,6 +49,32 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+.chat-markdown {
+  overflow-wrap: anywhere;
+}
+
+.chat-markdown > :first-child {
+  margin-top: 0;
+}
+
+.chat-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.chat-markdown p,
+.chat-markdown ul,
+.chat-markdown ol,
+.chat-markdown blockquote,
+.chat-markdown pre,
+.chat-markdown table {
+  margin-block: 0.6rem;
+}
+
+.chat-markdown ul,
+.chat-markdown ol {
+  padding-inline-start: 1.25rem;
 }
 
 @media (prefers-color-scheme: dark) {

@@ -83,18 +83,22 @@ function toTextReadableStream(
   return new ReadableStream<Uint8Array>({
     async pull(controller) {
       try {
-        const { done, value } = await iterator.next();
+        while (true) {
+          const { done, value } = await iterator.next();
 
-        if (done) {
-          controller.close();
-          return;
-        }
+          if (done) {
+            controller.close();
+            return;
+          }
 
-        const text = extractText(value.content);
-        if (text) {
-          controller.enqueue(encoder.encode(text));
+          const text = extractText(value.content);
+          if (text) {
+            controller.enqueue(encoder.encode(text));
+            return;
+          }
         }
       } catch (error) {
+        console.error("Inbox chat stream failed", error);
         controller.error(error);
       }
     },
