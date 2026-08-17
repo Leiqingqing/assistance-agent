@@ -25,7 +25,9 @@
     "typescript": "catalog:"
   },
   "dependencies": {
+    "@radix-ui/react-avatar": "catalog:",
     "@radix-ui/react-label": "catalog:",
+    "@radix-ui/react-scroll-area": "catalog:",
     "@radix-ui/react-separator": "catalog:",
     "@radix-ui/react-slot": "catalog:",
     "class-variance-authority": "catalog:",
