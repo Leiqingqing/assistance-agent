@@ -6,7 +6,7 @@
       "@app/*": ["./app/*"],
       "@env": ["./.env.ts"],
       "@env.server": ["./.env.server.ts"],
-      "/env": ["../api/.env.ts"]
+      "@api/env": ["../api/.env.ts"]
     },
     "plugins": [
       {

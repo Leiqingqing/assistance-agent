@@ -1,8 +1,19 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useChat } from "@ai-sdk/react";
+import { Avatar, AvatarFallback } from "@repo/ui/avatar";
+import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@repo/ui/card";
+import { Separator } from "@repo/ui/separator";
+import { Textarea } from "@repo/ui/textarea";
 import { TextStreamChatTransport, type UIMessage } from "ai";
 import {
   ArrowDown,
@@ -18,15 +29,13 @@ import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
 import { mermaid } from "@streamdown/mermaid";
-import {
-  StickToBottom,
-  useStickToBottomContext,
-} from "use-stick-to-bottom";
+import { StickToBottom, useStickToBottomContext } from "use-stick-to-bottom";
 import { getInboxChatUrl } from "@/api/chat";
 import { readClientSession } from "@/auth/client-sessions";
 import type { InboxConversation } from "./inbox-conversations";
 
 const streamdownPlugins = { cjk, code, math, mermaid };
+const CHARACTER_INTERVAL_MS = 18;
 
 const suggestions = [
   "帮我概括客户的诉求",
@@ -62,6 +71,33 @@ function MessageContent({
   isStreaming: boolean;
 }) {
   const textParts = message.parts.filter((part) => part.type === "text");
+  const fullText = textParts.map((part) => part.text).join("");
+  const fullCharacters = useMemo(() => Array.from(fullText), [fullText]);
+  const [visibleText, setVisibleText] = useState(
+    message.role === "assistant" && isStreaming ? "" : fullText,
+  );
+
+  useEffect(() => {
+    if (message.role !== "assistant") {
+      return;
+    }
+
+    if (!fullText.startsWith(visibleText)) {
+      setVisibleText("");
+      return;
+    }
+
+    const visibleCharacterCount = Array.from(visibleText).length;
+    if (visibleCharacterCount >= fullCharacters.length) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setVisibleText(fullCharacters.slice(0, visibleCharacterCount + 1).join(""));
+    }, CHARACTER_INTERVAL_MS);
+
+    return () => window.clearTimeout(timeout);
+  }, [fullCharacters, fullText, message.role, visibleText]);
 
   if (message.role === "user") {
     return (
@@ -77,23 +113,22 @@ function MessageContent({
 
   return (
     <div className="flex max-w-[min(48rem,94%)] items-start gap-3">
-      <div className="mt-1 grid size-8 shrink-0 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-        <Bot className="size-4" />
-      </div>
+      <Avatar className="mt-1 size-8 rounded-xl">
+        <AvatarFallback className="rounded-xl bg-secondary text-secondary-foreground">
+          <Bot className="size-4" />
+        </AvatarFallback>
+      </Avatar>
       <div className="min-w-0 rounded-2xl rounded-tl-md border border-border bg-card px-4 py-3 text-body text-content-body shadow-xs">
-        {textParts.map((part, index) => (
-          <Streamdown
-            animated
-            className="chat-markdown"
-            controls
-            isAnimating={isStreaming}
-            key={`${message.id}-${index}`}
-            mode={isStreaming ? "streaming" : "static"}
-            plugins={streamdownPlugins}
-          >
-            {part.text}
-          </Streamdown>
-        ))}
+        <Streamdown
+          animated
+          className="chat-markdown"
+          controls
+          isAnimating={isStreaming || visibleText !== fullText}
+          mode={isStreaming || visibleText !== fullText ? "streaming" : "static"}
+          plugins={streamdownPlugins}
+        >
+          {visibleText}
+        </Streamdown>
       </div>
     </div>
   );
@@ -133,6 +168,15 @@ export function ChatPanel({
     transport,
   });
   const isRunning = status === "submitted" || status === "streaming";
+  const latestMessage = messages.at(-1);
+  const latestAssistantText =
+    latestMessage?.role === "assistant"
+      ? latestMessage.parts
+          .filter((part) => part.type === "text")
+          .map((part) => part.text)
+          .join("")
+      : "";
+  const isWaitingForAssistantText = isRunning && !latestAssistantText;
 
   const submitPrompt = async (text: string) => {
     const value = text.trim();
@@ -151,7 +195,7 @@ export function ChatPanel({
 
   return (
     <section className="flex min-h-0 min-w-0 flex-1 flex-col bg-card">
-      <header className="flex min-h-20 items-center justify-between gap-4 border-b border-border px-5 py-4 sm:px-7">
+      <header className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 sm:px-7">
         <div className="flex min-w-0 items-center gap-3">
           <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-accent text-accent-foreground">
             <Mail className="size-5" />
@@ -165,11 +209,15 @@ export function ChatPanel({
             </p>
           </div>
         </div>
-        <div className="hidden items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-caption text-muted-foreground sm:flex">
+        <Badge
+          className="hidden bg-muted text-muted-foreground sm:flex"
+          variant="outline"
+        >
           <Sparkles className="size-3.5 text-primary" />
           AI 客服助手
-        </div>
+        </Badge>
       </header>
+      <Separator />
 
       <StickToBottom
         className="relative min-h-0 flex-1 overflow-y-auto bg-background"
@@ -178,20 +226,22 @@ export function ChatPanel({
       >
         <StickToBottom.Content className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-5 px-4 py-6 sm:px-8 sm:py-8">
           {messages.length === 0 ? (
-            <div className="my-auto grid justify-items-center gap-5 py-10 text-center">
-              <div className="grid size-14 place-items-center rounded-2xl bg-secondary text-secondary-foreground shadow-sm">
-                <Sparkles className="size-6" />
-              </div>
-              <div className="max-w-xl">
-                <h2 className="text-title">如何协助处理这条消息？</h2>
-                <p className="mt-2 text-body text-muted-foreground">
+            <Card className="my-auto w-full bg-card/80">
+              <CardHeader className="items-center text-center">
+                <Avatar className="size-14 rounded-2xl shadow-sm">
+                  <AvatarFallback className="rounded-2xl bg-secondary text-secondary-foreground">
+                    <Sparkles className="size-6" />
+                  </AvatarFallback>
+                </Avatar>
+                <CardTitle>如何协助处理这条消息？</CardTitle>
+                <CardDescription className="max-w-xl">
                   我已获得当前邮件的主题、发送方与摘要，可以帮你整理诉求、分析问题或起草回复。
-                </p>
-              </div>
-              <div className="flex max-w-2xl flex-wrap justify-center gap-2">
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap justify-center gap-2">
                 {suggestions.map((suggestion) => (
                   <Button
-                    className="rounded-full bg-card"
+                    className="rounded-full"
                     key={suggestion}
                     onClick={() => void submitPrompt(suggestion)}
                     size="sm"
@@ -200,8 +250,8 @@ export function ChatPanel({
                     {suggestion}
                   </Button>
                 ))}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ) : (
             messages.map((message, index) => (
               <MessageContent
@@ -214,11 +264,13 @@ export function ChatPanel({
             ))
           )}
 
-          {status === "submitted" ? (
+          {isWaitingForAssistantText ? (
             <div className="flex items-center gap-3 text-body text-muted-foreground">
-              <div className="grid size-8 place-items-center rounded-xl bg-secondary text-secondary-foreground">
-                <Bot className="size-4" />
-              </div>
+              <Avatar className="size-8 rounded-xl">
+                <AvatarFallback className="rounded-xl bg-secondary text-secondary-foreground">
+                  <Bot className="size-4" />
+                </AvatarFallback>
+              </Avatar>
               <span className="inline-flex items-center gap-1">
                 <i className="size-1.5 animate-bounce rounded-full bg-primary" />
                 <i className="size-1.5 animate-bounce rounded-full bg-primary [animation-delay:120ms]" />
@@ -228,31 +280,37 @@ export function ChatPanel({
           ) : null}
 
           {error ? (
-            <div className="rounded-xl border border-destructive/35 bg-destructive/10 px-4 py-3 text-body text-destructive">
-              <p>消息发送失败，请确认 API 子站已启动并允许当前 Web 来源。</p>
-              <Button
-                className="mt-2 h-auto p-0 text-destructive"
-                onClick={() => void regenerate()}
-                size="sm"
-                variant="ghost"
-              >
-                <RotateCcw className="size-3.5" />
-                重试
-              </Button>
-            </div>
+            <Card
+              className="border-destructive/35 bg-destructive/10 text-destructive shadow-none"
+              role="alert"
+            >
+              <CardContent className="p-4">
+                <p>消息发送失败，请确认 API 子站已启动并允许当前 Web 来源。</p>
+                <Button
+                  className="mt-2 h-auto p-0 text-destructive"
+                  onClick={() => void regenerate()}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <RotateCcw className="size-3.5" />
+                  重试
+                </Button>
+              </CardContent>
+            </Card>
           ) : null}
         </StickToBottom.Content>
         <ScrollToBottomButton />
       </StickToBottom>
 
-      <footer className="border-t border-border bg-card p-3 sm:px-6 sm:py-4">
+      <Separator />
+      <footer className="bg-card p-3 sm:px-6 sm:py-4">
         <form
           className="mx-auto flex max-w-4xl items-end gap-2 rounded-2xl border border-input bg-background p-2 shadow-sm transition-shadow focus-within:border-ring focus-within:shadow-focus"
           onSubmit={handleSubmit}
         >
-          <textarea
+          <Textarea
             aria-label="输入消息"
-            className="max-h-36 min-h-11 flex-1 resize-none bg-transparent px-3 py-2.5 text-body text-foreground outline-none placeholder:text-muted-foreground"
+            className="max-h-36 min-h-11 flex-1 resize-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0"
             disabled={isRunning}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={(event) => {
