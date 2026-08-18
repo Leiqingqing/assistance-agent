@@ -1,4 +1,10 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 
 export const applications = sqliteTable("applications", {
   id: text("id").primaryKey(),
@@ -84,4 +90,103 @@ export const refreshTokens = sqliteTable("refresh_tokens", {
   revokedAtMs: integer("revoked_at_ms"),
   replacedByTokenId: text("replaced_by_token_id"),
   reuseDetectedAtMs: integer("reuse_detected_at_ms"),
+});
+
+export const userAgentCompanions = sqliteTable(
+  "user_agent_companions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    status: text("status", {
+      enum: ["draft", "published", "archived"],
+    }).notNull(),
+    createdAtMs: integer("created_at_ms").notNull(),
+    updatedAtMs: integer("updated_at_ms").notNull(),
+    publishedAtMs: integer("published_at_ms"),
+    archivedAtMs: integer("archived_at_ms"),
+  },
+  (table) => [
+    index("idx_user_agent_companions_user_id").on(table.userId),
+    index("idx_user_agent_companions_user_status").on(
+      table.userId,
+      table.status,
+    ),
+  ],
+);
+
+export const agentConversations = sqliteTable(
+  "agent_conversations",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    agentId: text("agent_id")
+      .notNull()
+      .references(() => userAgentCompanions.id, { onDelete: "cascade" }),
+    title: text("title"),
+    summary: text("summary"),
+    messageCount: integer("message_count").notNull().default(0),
+    lastMessageAtMs: integer("last_message_at_ms"),
+    createdAtMs: integer("created_at_ms").notNull(),
+    updatedAtMs: integer("updated_at_ms").notNull(),
+  },
+  (table) => [
+    uniqueIndex("idx_agent_conversations_user_agent_unique").on(
+      table.userId,
+      table.agentId,
+    ),
+  ],
+);
+
+export const agentConversationMessages = sqliteTable(
+  "agent_conversation_messages",
+  {
+    id: text("id").primaryKey(),
+    conversationId: text("conversation_id")
+      .notNull()
+      .references(() => agentConversations.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    agentId: text("agent_id")
+      .notNull()
+      .references(() => userAgentCompanions.id, { onDelete: "cascade" }),
+    role: text("role", { enum: ["user", "assistant"] }).notNull(),
+    content: text("content").notNull(),
+    status: text("status", { enum: ["completed", "failed"] }).notNull(),
+    metadataJson: text("metadata_json"),
+    createdAtMs: integer("created_at_ms").notNull(),
+  },
+  (table) => [
+    index("idx_agent_conversation_messages_conversation_created").on(
+      table.conversationId,
+      table.createdAtMs,
+    ),
+  ],
+);
+
+export const agentMemories = sqliteTable("agent_memories", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  agentId: text("agent_id")
+    .notNull()
+    .references(() => userAgentCompanions.id, { onDelete: "cascade" }),
+  type: text("type").notNull(),
+  content: text("content").notNull(),
+  importance: integer("importance").notNull().default(3),
+  status: text("status", {
+    enum: ["active", "disabled", "deleted"],
+  }).notNull(),
+  sourceMessageId: text("source_message_id").references(
+    () => agentConversationMessages.id,
+    { onDelete: "set null" },
+  ),
+  createdAtMs: integer("created_at_ms").notNull(),
+  updatedAtMs: integer("updated_at_ms").notNull(),
 });
