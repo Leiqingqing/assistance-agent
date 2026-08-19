@@ -31,6 +31,10 @@ export type HttpPostOptions = {
   init?: AxiosRequestConfig;
 };
 
+export type HttpMutationOptions = {
+  init?: AxiosRequestConfig;
+};
+
 function resolveUrl(path: string, query?: HttpQuery): string {
   const value =
     typeof window === "undefined"
@@ -213,6 +217,29 @@ export const http = {
         ...options?.init,
         method: "POST",
         data: payload,
+      }),
+    );
+  },
+
+  patch<TPayload, TData>(
+    path: string,
+    payload: TPayload,
+    options?: HttpMutationOptions,
+  ) {
+    return request<TData>(
+      createRequestConfig(path, {
+        ...options?.init,
+        method: "PATCH",
+        data: payload,
+      }),
+    );
+  },
+
+  delete<TData>(path: string, options?: HttpMutationOptions) {
+    return request<TData>(
+      createRequestConfig(path, {
+        ...options?.init,
+        method: "DELETE",
       }),
     );
   },
