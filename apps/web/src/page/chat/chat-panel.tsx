@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
@@ -9,9 +9,13 @@ import { Separator } from "@repo/ui/separator";
 import { useQuery } from "@tanstack/react-query";
 import { TextStreamChatTransport, type UIMessage } from "ai";
 import { Bot, LoaderCircle, RotateCcw, Sparkles } from "lucide-react";
-import { StickToBottom } from "use-stick-to-bottom";
+import {
+  StickToBottom,
+  type StickToBottomContext,
+} from "use-stick-to-bottom";
 import {
   getAgentConversation,
+  getEarlierAgentMessages,
   getInboxChatUrl,
   type AgentCompanion,
   type AgentConversation,
@@ -49,6 +53,12 @@ function LoadedChatPanel({
   conversation: AgentConversation;
 }) {
   const [input, setInput] = useState("");
+  const [nextCursor, setNextCursor] = useState(conversation.nextCursor);
+  const [isAtTop, setIsAtTop] = useState(false);
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+  const [earlierMessagesError, setEarlierMessagesError] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const stickToBottomContextRef = useRef<StickToBottomContext | null>(null);
   const initialMessages = useMemo(
     () => toInitialMessages(conversation),
     [conversation],
@@ -76,7 +86,15 @@ function LoadedChatPanel({
       }),
     [conversation.conversationId],
   );
-  const { error, messages, regenerate, sendMessage, status, stop } = useChat({
+  const {
+    error,
+    messages,
+    regenerate,
+    sendMessage,
+    setMessages,
+    status,
+    stop,
+  } = useChat({
     id: conversation.conversationId,
     messages: initialMessages,
     transport,
@@ -91,6 +109,66 @@ function LoadedChatPanel({
           .join("")
       : "";
   const isWaitingForAssistantText = isRunning && !latestAssistantText;
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const scrollContainer =
+        stickToBottomContextRef.current?.scrollRef.current;
+
+      if (scrollContainer instanceof HTMLDivElement) {
+        scrollContainerRef.current = scrollContainer;
+        setIsAtTop(scrollContainer.scrollTop <= 1);
+      }
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const loadEarlierMessages = async () => {
+    if (!nextCursor || isLoadingEarlier) {
+      return;
+    }
+
+    const scrollContainer = scrollContainerRef.current;
+    const previousScrollHeight = scrollContainer?.scrollHeight ?? 0;
+    const previousScrollTop = scrollContainer?.scrollTop ?? 0;
+
+    setIsLoadingEarlier(true);
+    setEarlierMessagesError(false);
+
+    try {
+      const earlierConversation = await getEarlierAgentMessages(
+        agent.id,
+        nextCursor,
+      );
+      const earlierMessages = toInitialMessages(earlierConversation);
+
+      setMessages((currentMessages) => {
+        const currentIds = new Set(
+          currentMessages.map((message) => message.id),
+        );
+        return [
+          ...earlierMessages.filter((message) => !currentIds.has(message.id)),
+          ...currentMessages,
+        ];
+      });
+      setNextCursor(earlierConversation.nextCursor);
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollContainer) {
+            scrollContainer.scrollTop =
+              previousScrollTop +
+              (scrollContainer.scrollHeight - previousScrollHeight);
+          }
+        });
+      });
+    } catch {
+      setEarlierMessagesError(true);
+    } finally {
+      setIsLoadingEarlier(false);
+    }
+  };
 
   const submitPrompt = async (text: string) => {
     const value = text.trim();
@@ -130,10 +208,36 @@ function LoadedChatPanel({
 
       <StickToBottom
         className="relative min-h-0 flex-1 overflow-y-auto bg-background"
+        contextRef={stickToBottomContextRef}
         initial="instant"
+        onScroll={(event) => {
+          scrollContainerRef.current = event.currentTarget;
+          setIsAtTop(event.currentTarget.scrollTop <= 1);
+        }}
         resize="smooth"
       >
         <StickToBottom.Content className="mx-auto flex min-h-full w-full max-w-4xl flex-col gap-5 px-4 py-6 sm:px-8 sm:py-8">
+          {isAtTop && nextCursor ? (
+            <div className="flex flex-col items-center gap-2">
+              <Button
+                disabled={isLoadingEarlier}
+                onClick={() => void loadEarlierMessages()}
+                size="sm"
+                variant="outline"
+              >
+                {isLoadingEarlier ? (
+                  <LoaderCircle className="size-3.5 animate-spin" />
+                ) : null}
+                查看更早消息
+              </Button>
+              {earlierMessagesError ? (
+                <p className="text-caption text-destructive">
+                  更早消息加载失败，请重试。
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
           {messages.length === 0 ? (
             <p className="my-auto text-center text-body text-muted-foreground">
               向 {agent.name} 发送第一条消息吧。

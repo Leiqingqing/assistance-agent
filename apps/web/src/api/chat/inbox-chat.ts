@@ -29,3 +29,14 @@ export async function getAgentConversation(
   );
   return AgentConversationResponseSchema.parse(result);
 }
+
+export async function getEarlierAgentMessages(
+  agentId: string,
+  cursor: string,
+): Promise<AgentConversation> {
+  const result = await http.get<unknown>(
+    `/rpc/chat/inbox/${encodeURIComponent(agentId)}/messages`,
+    { query: { cursor } },
+  );
+  return AgentConversationResponseSchema.parse(result);
+}
