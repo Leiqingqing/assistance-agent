@@ -6,3 +6,4 @@ export * from "./role";
 export * from "./system";
 export * from "./user";
 export * from "./chat";
+export * from "./memory";
