@@ -6,7 +6,7 @@ import { MESSAGE_PAGE_SIZE } from "@/chat/constants";
 import { agentNotFoundError } from "@/chat/errors";
 import { getDb } from "@/db/client";
 import {
-  doesUserOwnAgent,
+  findOwnedAgent,
   findOrCreateConversation,
   listConversationMessages,
 } from "@/chat/repository";
@@ -22,9 +22,9 @@ export async function handleGetConversation(
 ) {
   const db = getDb(context.env.DB);
   const userId = context.get("userId");
-  const ownsAgent = await doesUserOwnAgent(db, userId, agentId);
+  const agent = await findOwnedAgent(db, userId, agentId);
 
-  if (!ownsAgent) {
+  if (agent === null) {
     throw agentNotFoundError();
   }
 
@@ -61,7 +61,9 @@ export async function handleGetConversation(
     summary: conversation.summary,
     messageCount: conversation.messageCount,
     openingMessage:
-      conversation.messageCount === 0 ? DEFAULT_OPENING_MESSAGE : null,
+      conversation.messageCount === 0
+        ? agent.openingMessage || DEFAULT_OPENING_MESSAGE
+        : null,
     messages,
     nextCursor,
   });

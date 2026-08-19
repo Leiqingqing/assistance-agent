@@ -10,6 +10,7 @@ import { requireUser, type AuthVariables } from "@/auth/require-user";
 import { handleGetConversation } from "@/chat/service/get-conversation";
 import { handleGetMessages } from "@/chat/service/get-messages";
 import { handleInboxChat } from "@/chat/service/inbox-chat";
+import { handleListAgents } from "@/chat/service/list-agents";
 import { validate } from "@/lib/validator";
 
 export const chatRoutes = new Hono<{
@@ -17,10 +18,11 @@ export const chatRoutes = new Hono<{
   Variables: AuthVariables;
 }>().post(
   "/inbox",
+  requireUser,
   validate("json", InboxChatRequestSchema),
   async (c) => {
     const req = c.req.valid("json");
-    return handleInboxChat(c.env, req);
+    return handleInboxChat(c, req);
   },
 );
 
@@ -28,6 +30,10 @@ export const rpcChatRoutes = new Hono<{
   Bindings: ApiEnvBindings;
   Variables: AuthVariables;
 }>()
+  .get("/inbox", requireUser, async (c) => {
+    const result = await handleListAgents(c);
+    return c.json(buildSuccess(createMeta(), result));
+  })
   .get(
     "/inbox/:agentId/conversation",
     requireUser,

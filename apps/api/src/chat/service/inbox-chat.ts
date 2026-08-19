@@ -1,7 +1,24 @@
 import { AppError, BizCode } from "@repo/contracts/common";
 import { InboxChatRequestSchema } from "@repo/contracts/chat";
+import type { Context } from "hono";
 import type { z } from "zod";
 import { getApiEnv, type ApiEnvBindings } from "/env";
+import type { AuthVariables } from "@/auth/require-user";
+import {
+  MEMORY_INJECTION_LIMIT,
+  MESSAGE_PAGE_SIZE,
+  SUMMARY_RECENT_MESSAGE_LIMIT,
+} from "@/chat/constants";
+import { agentNotFoundError, conversationNotFoundError } from "@/chat/errors";
+import {
+  findOwnedAgent,
+  findOwnedConversationById,
+  listActiveMemories,
+  listRecentCompletedMessages,
+  saveUserMessage,
+} from "@/chat/repository";
+import { saveAssistantTurn } from "@/chat/service/save-assistant-turn";
+import { getDb } from "@/db/client";
 import { buildTextStreamResponse } from "@/lib/response";
 
 type InboxChatRequest = z.infer<typeof InboxChatRequestSchema>;
@@ -32,42 +49,101 @@ function extractText(value: unknown): string {
   return extractText(record.content);
 }
 
-function buildMessages(payload: InboxChatRequest): ChatMessage[] {
-  const messages: ChatMessage[] = [
-    {
-      role: "system",
-      content: [
-        "你是 AI Agent Web 控制台里的聊天助手。",
-        "请基于当前聊天上下文，用简洁、自然的中文回答用户。",
-        "如果用户要求起草回复，请直接给出可发送的回复内容。",
-      ].join("\n"),
-    },
-    {
-      role: "user",
-      content: [
-        `聊天主题：${payload.mail.subject}`,
-        `发送方：${payload.mail.sender} <${payload.mail.senderEmail}>`,
-        `聊天摘要：${payload.mail.teaser}`,
-      ].join("\n"),
-    },
-  ];
+type AgentPrompt = {
+  name: string;
+  headline: string | null;
+  description: string | null;
+  storyBackground: string | null;
+  personalityPrompt: string | null;
+  tonePrompt: string | null;
+  guardrailsPrompt: string | null;
+  defaultPrompt: string | null;
+};
 
-  for (const message of payload.messages) {
+type ConversationPrompt = {
+  summary: string | null;
+};
+
+type MemoryPrompt = {
+  type: string;
+  content: string;
+  importance: number;
+};
+
+type HistoryMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+function getLatestUserContent(payload: InboxChatRequest): string {
+  for (let index = payload.messages.length - 1; index >= 0; index -= 1) {
+    const message = payload.messages[index];
+    if (message?.role !== "user") {
+      continue;
+    }
+
     const content = message.parts
       .map(extractText)
       .filter(Boolean)
       .join("\n")
       .trim();
 
-    if (!content) {
-      continue;
+    if (content) {
+      return content;
     }
+  }
 
+  throw new AppError(
+    BizCode.COMMON_INVALID_REQUEST,
+    "A non-empty user message is required",
+    400,
+  );
+}
+
+function buildMessages(input: {
+  agent: AgentPrompt;
+  conversation: ConversationPrompt;
+  memories: MemoryPrompt[];
+  history: HistoryMessage[];
+  currentUserContent: string;
+}): ChatMessage[] {
+  const { agent, conversation, memories, history, currentUserContent } = input;
+  const messages: ChatMessage[] = [
+    {
+      role: "system",
+      content: [
+        agent.defaultPrompt || "你是 AI Agent Web 控制台里的聊天陪伴助手。",
+        `你的名字是：${agent.name}`,
+        agent.headline ? `角色定位：${agent.headline}` : "",
+        agent.description ? `角色描述：${agent.description}` : "",
+        agent.storyBackground ? `故事背景：${agent.storyBackground}` : "",
+        agent.personalityPrompt ? `性格设定：${agent.personalityPrompt}` : "",
+        agent.tonePrompt ? `表达语气：${agent.tonePrompt}` : "",
+        agent.guardrailsPrompt ? `行为边界：${agent.guardrailsPrompt}` : "",
+        memories.length > 0
+          ? [
+              "以下是用户与该 Agent 的长期记忆，请优先尊重：",
+              ...memories.map(
+                (memory) =>
+                  `- [${memory.type} / 重要度 ${memory.importance}] ${memory.content}`,
+              ),
+            ].join("\n")
+          : "",
+        conversation.summary ? `此前对话摘要：${conversation.summary}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    },
+  ];
+
+  for (const message of history) {
     messages.push({
-      role: message.role === "user" ? "user" : "assistant",
-      content,
+      role: message.role,
+      content: message.content,
     });
   }
+
+  messages.push({ role: "user", content: currentUserContent });
 
   return messages;
 }
@@ -97,7 +173,9 @@ function extractDeltaContent(event: string): string {
   };
 
   if (payload.error) {
-    throw new Error(payload.error.message ?? "Upstream completion stream failed");
+    throw new Error(
+      payload.error.message ?? "Upstream completion stream failed",
+    );
   }
 
   const content = payload.choices?.[0]?.delta?.content;
@@ -106,11 +184,13 @@ function extractDeltaContent(event: string): string {
 
 function sseToTextReadableStream(
   source: ReadableStream<Uint8Array>,
+  onComplete: (content: string) => Promise<void>,
 ): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
   const reader = source.getReader();
   let buffer = "";
+  let completeContent = "";
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -123,8 +203,12 @@ function sseToTextReadableStream(
             if (buffer.trim()) {
               const text = extractDeltaContent(buffer);
               if (text) {
+                completeContent += text;
                 controller.enqueue(encoder.encode(text));
               }
+            }
+            if (completeContent.trim()) {
+              await onComplete(completeContent);
             }
             controller.close();
             return;
@@ -136,6 +220,7 @@ function sseToTextReadableStream(
           for (const event of events) {
             const text = extractDeltaContent(event);
             if (text) {
+              completeContent += text;
               controller.enqueue(encoder.encode(text));
             }
           }
@@ -154,10 +239,13 @@ function sseToTextReadableStream(
 }
 
 export async function handleInboxChat(
-  envBindings: ApiEnvBindings,
+  context: Context<{
+    Bindings: ApiEnvBindings;
+    Variables: AuthVariables;
+  }>,
   payload: InboxChatRequest,
 ): Promise<Response> {
-  const env = getApiEnv(envBindings);
+  const env = getApiEnv(context.env);
 
   if (!env.DEEPSEEK_API_KEY?.trim()) {
     throw new AppError(
@@ -168,9 +256,59 @@ export async function handleInboxChat(
     );
   }
 
-  const baseUrl = (
-    env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com"
-  ).replace(/\/+$/, "");
+  const db = getDb(context.env.DB);
+  const userId = context.get("userId");
+  const conversation = await findOwnedConversationById(
+    db,
+    userId,
+    payload.conversationId,
+  );
+
+  if (conversation === null) {
+    throw conversationNotFoundError();
+  }
+
+  const agentId = conversation.agentId;
+  const agent = await findOwnedAgent(db, userId, agentId);
+
+  if (agent === null) {
+    throw agentNotFoundError();
+  }
+  const currentUserContent = getLatestUserContent(payload);
+  const userMessageId = crypto.randomUUID();
+  const userMessageAtMs = Date.now();
+
+  await saveUserMessage(db, {
+    id: userMessageId,
+    conversationId: conversation.id,
+    userId,
+    agentId,
+    content: currentUserContent,
+    nowMs: userMessageAtMs,
+  });
+
+  const [memories, recentHistory] = await Promise.all([
+    listActiveMemories(db, {
+      userId,
+      agentId,
+      limit: MEMORY_INJECTION_LIMIT,
+    }),
+    listRecentCompletedMessages(db, {
+      conversationId: conversation.id,
+      userId,
+      agentId,
+      excludeMessageId: userMessageId,
+      limit: MESSAGE_PAGE_SIZE,
+    }),
+  ]);
+  const history = recentHistory.reverse().map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
+  const baseUrl = (env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com").replace(
+    /\/+$/,
+    "",
+  );
   const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -181,7 +319,13 @@ export async function handleInboxChat(
     },
     body: JSON.stringify({
       model: env.DEEPSEEK_MODEL ?? "deepseek-chat",
-      messages: buildMessages(payload),
+      messages: buildMessages({
+        agent,
+        conversation,
+        memories,
+        history,
+        currentUserContent,
+      }),
       stream: true,
     }),
   });
@@ -205,6 +349,19 @@ export async function handleInboxChat(
   }
 
   return buildTextStreamResponse(
-    sseToTextReadableStream(upstreamResponse.body),
+    sseToTextReadableStream(upstreamResponse.body, async (content) => {
+      await saveAssistantTurn(db, {
+        id: crypto.randomUUID(),
+        conversationId: conversation.id,
+        userId,
+        agentId,
+        userMessageId,
+        userContent: currentUserContent,
+        assistantContent: content,
+        previousSummary: conversation.summary,
+        recentMessages: history.slice(-SUMMARY_RECENT_MESSAGE_LIMIT),
+        nowMs: Date.now(),
+      });
+    }),
   );
 }

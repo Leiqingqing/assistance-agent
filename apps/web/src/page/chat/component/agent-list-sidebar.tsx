@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { Avatar, AvatarFallback } from "@repo/ui/avatar";
 import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
@@ -8,16 +9,27 @@ import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { ScrollArea } from "@repo/ui/scroll-area";
 import { Separator } from "@repo/ui/separator";
-import { Inbox, Search, Sparkles } from "lucide-react";
-import type { InboxConversation } from "../inbox-conversations";
+import { Bot, Brain, Search, Sparkles } from "lucide-react";
+import type { AgentCompanion } from "@/api/chat";
 
-function ConversationRow({
+function formatLastMessageTime(value: number | null): string {
+  if (value === null) {
+    return "";
+  }
+
+  return new Intl.DateTimeFormat("zh-CN", {
+    month: "numeric",
+    day: "numeric",
+  }).format(value);
+}
+
+function AgentRow({
   active,
-  conversation,
+  agent,
   onSelect,
 }: {
   active: boolean;
-  conversation: InboxConversation;
+  agent: AgentCompanion;
   onSelect: () => void;
 }) {
   return (
@@ -40,60 +52,55 @@ function ConversationRow({
               : "group-hover:bg-secondary group-hover:text-secondary-foreground",
           ].join(" ")}
         >
-          {conversation.mail.sender.slice(0, 1)}
+          {agent.name.slice(0, 1)}
         </AvatarFallback>
       </Avatar>
       <span className="min-w-0">
-        <span className="flex items-center gap-2">
-          <strong className="truncate text-body font-semibold text-foreground">
-            {conversation.mail.sender}
-          </strong>
-          {conversation.unread ? (
-            <Badge
-              aria-label="未读"
-              className="size-2 shrink-0 border-0 bg-blush-500 p-0"
-            />
-          ) : null}
-        </span>
+        <strong className="block truncate text-body font-semibold text-foreground">
+          {agent.name}
+        </strong>
         <span className="mt-0.5 block truncate text-body text-foreground">
-          {conversation.mail.subject}
+          {agent.headline ?? "AI 陪伴助手"}
         </span>
         <span className="mt-1 block truncate text-caption text-muted-foreground">
-          {conversation.preview}
+          {agent.lastAssistantMessage ??
+            agent.openingMessage ??
+            agent.description ??
+            "开始一段新对话"}
         </span>
       </span>
       <time className="pt-0.5 text-caption text-muted-foreground">
-        {conversation.time}
+        {formatLastMessageTime(agent.lastAssistantMessageAtMs)}
       </time>
     </Button>
   );
 }
 
-export function ConversationSidebar({
-  conversations,
+export function AgentSidebar({
+  agents,
   selectedId,
   onSelect,
 }: {
-  conversations: readonly InboxConversation[];
-  selectedId: string;
+  agents: readonly AgentCompanion[];
+  selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
   const [query, setQuery] = useState("");
-  const filteredConversations = useMemo(() => {
+  const filteredAgents = useMemo(() => {
     const keyword = query.trim().toLowerCase();
     if (!keyword) {
-      return conversations;
+      return agents;
     }
 
-    return conversations.filter((conversation) =>
+    return agents.filter((agent) =>
       [
-        conversation.mail.sender,
-        conversation.mail.senderEmail,
-        conversation.mail.subject,
-        conversation.preview,
-      ].some((value) => value.toLowerCase().includes(keyword)),
+        agent.name,
+        agent.headline,
+        agent.description,
+        agent.lastAssistantMessage,
+      ].some((value) => value?.toLowerCase().includes(keyword)),
     );
-  }, [conversations, query]);
+  }, [agents, query]);
 
   return (
     <aside className="flex min-h-0 flex-col border-b border-border bg-muted/45 lg:border-r lg:border-b-0">
@@ -104,25 +111,38 @@ export function ConversationSidebar({
               <Sparkles className="size-5" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">客服工作台</p>
-              <p className="text-caption text-muted-foreground">AI Inbox</p>
+              <p className="font-semibold text-foreground">我的 Agent</p>
+              <p className="text-caption text-muted-foreground">
+                AI Companions
+              </p>
             </div>
           </div>
-          <Badge variant="secondary">
-            {conversations.filter((item) => item.unread).length} 未读
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="secondary">{agents.length} 位</Badge>
+            <Button
+              aria-label="管理记忆"
+              asChild
+              className="rounded-xl"
+              size="icon"
+              variant="ghost"
+            >
+              <Link href="/memory" title="管理记忆">
+                <Brain className="size-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
         <div className="relative mt-4">
           <Label className="sr-only" htmlFor="conversation-search">
-            搜索对话
+            搜索 Agent
           </Label>
           <Search className="pointer-events-none absolute top-1/2 left-3 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="rounded-xl bg-card pl-9"
             id="conversation-search"
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索客户或主题"
+            placeholder="搜索 Agent"
             type="search"
             value={query}
           />
@@ -132,28 +152,28 @@ export function ConversationSidebar({
 
       <div className="flex items-center justify-between px-5 pt-4 pb-2">
         <div className="flex items-center gap-2">
-          <Inbox className="size-4 text-primary" />
-          <h2 className="text-body font-semibold">对话记录</h2>
+          <Bot className="size-4 text-primary" />
+          <h2 className="text-body font-semibold">Agent 列表</h2>
         </div>
         <span className="text-caption text-muted-foreground">
-          {filteredConversations.length} 条
+          {filteredAgents.length} 位
         </span>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <nav aria-label="对话记录" className="space-y-1 px-2 pb-3">
-          {filteredConversations.length ? (
-            filteredConversations.map((conversation) => (
-              <ConversationRow
-                active={conversation.id === selectedId}
-                conversation={conversation}
-                key={conversation.id}
-                onSelect={() => onSelect(conversation.id)}
+        <nav aria-label="Agent 列表" className="space-y-1 px-2 pb-3">
+          {filteredAgents.length ? (
+            filteredAgents.map((agent) => (
+              <AgentRow
+                active={agent.id === selectedId}
+                agent={agent}
+                key={agent.id}
+                onSelect={() => onSelect(agent.id)}
               />
             ))
           ) : (
             <p className="px-4 py-8 text-center text-body text-muted-foreground">
-              没有匹配的对话
+              没有匹配的 Agent
             </p>
           )}
         </nav>

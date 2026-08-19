@@ -1,0 +1,12 @@
+ALTER TABLE user_agent_companions ADD COLUMN headline TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN description TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN story_background TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN personality_prompt TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN tone_prompt TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN guardrails_prompt TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN opening_message TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN default_prompt TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN visibility TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN image_key TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN last_assistant_message TEXT;
+ALTER TABLE user_agent_companions ADD COLUMN last_assistant_message_at_ms INTEGER;

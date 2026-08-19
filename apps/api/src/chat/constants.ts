@@ -1,1 +1,3 @@
 export const MESSAGE_PAGE_SIZE = 40;
+export const MEMORY_INJECTION_LIMIT = 10;
+export const SUMMARY_RECENT_MESSAGE_LIMIT = 6;
