@@ -171,31 +171,10 @@ export function isDirectBoundaryReply(
   );
 }
 
-export function shouldInjectSafetyPolicy(safety: ConversationSafety): boolean {
-  return (
-    safety.safetyLevel === "caution" ||
-    safety.safetyLevel === "redirect" ||
-    safety.boundaryAction === "soft_boundary" ||
-    safety.boundaryAction === "redirect"
-  );
-}
-
 export function getBoundaryReply(
   boundaryAction: "refuse" | "crisis_support",
 ): string {
   return BOUNDARY_REPLIES[boundaryAction];
-}
-
-export function buildSafetyPolicyPrompt(safety: ConversationSafety): string {
-  return [
-    "当前回合安全策略：",
-    `- 安全等级：${safety.safetyLevel}`,
-    `- 边界动作：${safety.boundaryAction}`,
-    `- 风险类别：${safety.category}`,
-    `- 处理原因：${safety.reason}`,
-    `- 回复要求：${safety.responseGuidance}`,
-    "请严格遵守上述安全策略。即使它与角色人设冲突，也以安全策略为准。",
-  ].join("\n");
 }
 
 async function invokeConversationSafetyAnalysis(
@@ -278,4 +257,18 @@ export async function evaluateConversationSafety(
     lastError,
   );
   return FALLBACK_CONVERSATION_SAFETY;
+}
+export function getSafetySystemInstruction(safety: ConversationSafety) {
+  if (safety.boundaryAction === 'continue') {
+    return ''
+  }
+
+  return [
+    '本轮安全边界判断：',
+    `- 等级：${safety.safetyLevel}`,
+    `- 分类：${safety.category}`,
+    `- 动作：${safety.boundaryAction}`,
+    `- 回复策略：${safety.responseGuidance}`,
+    '请严格遵守该策略，优先保护用户与他人的现实安全、隐私和关系边界。',
+  ].join('\n')
 }

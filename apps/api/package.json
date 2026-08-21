@@ -19,6 +19,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",
     "@langchain/core": "^1.2.9",
+    "@langchain/langgraph": "^1.4.12",
     "@langchain/openai": "^1.5.9",
     "@repo/contracts": "workspace:*",
     "drizzle-orm": "^0.45.2",

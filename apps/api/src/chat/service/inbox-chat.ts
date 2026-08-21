@@ -17,13 +17,16 @@ import {
   saveUserMessage,
 } from "@/chat/repository";
 
-import { 
+import {
   evaluateConversationSafety,
-  buildSafetyPolicyPrompt,
   getBoundaryReply,
+  getSafetySystemInstruction,
   isDirectBoundaryReply,
   serializeConversationSafetyMetadata,
-  shouldInjectSafetyPolicy, } from "@/chat/service/evaluate-conversation-safety";
+} from "@/chat/service/evaluate-conversation-safety";
+import { CONVERSATION_INTENT_ANALYSIS_VERSION, getIntentSystemInstruction } from "@/chat/service/conversation-analysis/detect-intent";
+import { detectConversationIntent } from "@/chat/service/conversation-analysis/graph";
+import { mergeConversationMetadata } from "@/chat/service/conversation-analysis/metadata";
 import { saveAssistantTurn } from "@/chat/service/save-assistant-turn";
 import type {
   BuildChatMessagesInput,
@@ -84,7 +87,7 @@ function getLatestUserContent(payload: InboxChatRequest): string {
 }
 
 function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
-  const { agent, conversation, memories, history, currentUserContent } = input;
+  const { agent, conversation, memories, history, currentUserContent, intent, safety } = input;
   const messages: ChatCompletionMessage[] = [
     {
       role: "system",
@@ -97,6 +100,8 @@ function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
         agent.personalityPrompt ? `性格设定：${agent.personalityPrompt}` : "",
         agent.tonePrompt ? `表达语气：${agent.tonePrompt}` : "",
         agent.guardrailsPrompt ? `行为边界：${agent.guardrailsPrompt}` : "",
+        getSafetySystemInstruction(safety),
+        getIntentSystemInstruction(intent??null),
         memories.length > 0
           ? [
               "以下是用户与该 Agent 的长期记忆，请优先尊重：",
@@ -107,7 +112,7 @@ function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
             ].join("\n")
           : "",
         conversation.summary ? `此前对话摘要：${conversation.summary}` : "",
-        input.safetyPolicy ?? "",
+        
       ]
         .filter(Boolean)
         .join("\n"),
@@ -283,16 +288,7 @@ export async function handleInboxChat(
     history: history.slice(-SAFETY_RECENT_MESSAGE_LIMIT),
     currentUserContent,
   });
-
-  await saveUserMessage(db, {
-    id: userMessageId,
-    conversationId: conversation.id,
-    userId,
-    agentId,
-    content: currentUserContent,
-    metadataJson: serializeConversationSafetyMetadata(safety),
-    nowMs: userMessageAtMs,
-  });
+  const safetyMetadataJson = serializeConversationSafetyMetadata(safety);
 
   const saveCompletedAssistant = async (content: string) => {
     await saveAssistantTurn(db, {
@@ -311,6 +307,16 @@ export async function handleInboxChat(
   };
 
   if (isDirectBoundaryReply(safety)) {
+    await saveUserMessage(db, {
+      id: userMessageId,
+      conversationId: conversation.id,
+      userId,
+      agentId,
+      content: currentUserContent,
+      metadataJson: safetyMetadataJson,
+      nowMs: userMessageAtMs,
+    });
+
     return buildTextStreamResponse(
       buildImmediateTextStream(
         getBoundaryReply(safety.boundaryAction),
@@ -318,6 +324,28 @@ export async function handleInboxChat(
       ),
     );
   }
+
+  const intent = await detectConversationIntent(env, {
+    agentName: agent.name,
+    agentGuardrails: agent.guardrailsPrompt,
+    safety,
+    activeMemories: memories,
+    recentMessages: history,
+    userText: currentUserContent,
+  });
+
+  await saveUserMessage(db, {
+    id: userMessageId,
+    conversationId: conversation.id,
+    userId,
+    agentId,
+    content: currentUserContent,
+    metadataJson: mergeConversationMetadata(safetyMetadataJson, {
+      intentAnalysisVersion: CONVERSATION_INTENT_ANALYSIS_VERSION,
+      intent,
+    }),
+    nowMs: userMessageAtMs,
+  });
 
   const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
@@ -335,9 +363,8 @@ export async function handleInboxChat(
         memories,
         history,
         currentUserContent,
-        safetyPolicy: shouldInjectSafetyPolicy(safety)
-          ? buildSafetyPolicyPrompt(safety)
-          : undefined,
+        safety,
+        intent
       }),
       stream: true,
     }),
