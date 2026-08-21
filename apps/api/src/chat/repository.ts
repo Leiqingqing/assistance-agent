@@ -179,22 +179,25 @@ export async function listRecentCompletedMessages(
     conversationId: string;
     userId: string;
     agentId: string;
-    excludeMessageId: string;
+    excludeMessageId?: string;
     limit: number;
   },
 ) {
+  const filters = [
+    eq(agentConversationMessages.conversationId, input.conversationId),
+    eq(agentConversationMessages.userId, input.userId),
+    eq(agentConversationMessages.agentId, input.agentId),
+    eq(agentConversationMessages.status, "completed"),
+  ];
+
+  if (input.excludeMessageId !== undefined) {
+    filters.push(ne(agentConversationMessages.id, input.excludeMessageId));
+  }
+
   return db
     .select()
     .from(agentConversationMessages)
-    .where(
-      and(
-        eq(agentConversationMessages.conversationId, input.conversationId),
-        eq(agentConversationMessages.userId, input.userId),
-        eq(agentConversationMessages.agentId, input.agentId),
-        eq(agentConversationMessages.status, "completed"),
-        ne(agentConversationMessages.id, input.excludeMessageId),
-      ),
-    )
+    .where(and(...filters))
     .orderBy(
       desc(agentConversationMessages.createdAtMs),
       desc(agentConversationMessages.id),
@@ -232,6 +235,7 @@ export async function saveUserMessage(
     userId: string;
     agentId: string;
     content: string;
+    metadataJson?: string | null;
     nowMs: number;
   },
 ): Promise<void> {
@@ -244,6 +248,7 @@ export async function saveUserMessage(
       role: "user",
       content: input.content,
       status: "completed",
+      metadataJson: input.metadataJson ?? null,
       createdAtMs: input.nowMs,
     }),
     db

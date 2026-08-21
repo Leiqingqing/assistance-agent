@@ -10,7 +10,7 @@ import { Label } from "@repo/ui/label";
 import { ScrollArea } from "@repo/ui/scroll-area";
 import { Separator } from "@repo/ui/separator";
 import { Bot, Brain, Search, Sparkles } from "lucide-react";
-import type { AgentCompanion } from "@/api/chat";
+import { AgentCompanion } from "@repo/contracts";
 
 function formatLastMessageTime(value: number | null): string {
   if (value === null) {

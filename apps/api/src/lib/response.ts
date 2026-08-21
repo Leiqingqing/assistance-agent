@@ -12,3 +12,24 @@ export function buildTextStreamResponse(
     },
   });
 }
+
+export function buildImmediateTextStream(
+  content: string,
+  onComplete: (content: string) => Promise<void>,
+): ReadableStream<Uint8Array> {
+  const encoder = new TextEncoder();
+
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      try {
+        if (content) {
+          controller.enqueue(encoder.encode(content));
+        }
+        await onComplete(content);
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+      }
+    },
+  });
+}

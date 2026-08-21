@@ -1,12 +1,11 @@
 import { AppError, BizCode } from "@repo/contracts/common";
-import { InboxChatRequestSchema } from "@repo/contracts/chat";
 import type { Context } from "hono";
-import type { z } from "zod";
 import { getApiEnv, type ApiEnvBindings } from "/env";
 import type { AuthVariables } from "@/auth/require-user";
 import {
   MEMORY_INJECTION_LIMIT,
   MESSAGE_PAGE_SIZE,
+  SAFETY_RECENT_MESSAGE_LIMIT,
   SUMMARY_RECENT_MESSAGE_LIMIT,
 } from "@/chat/constants";
 import { agentNotFoundError, conversationNotFoundError } from "@/chat/errors";
@@ -17,15 +16,25 @@ import {
   listRecentCompletedMessages,
   saveUserMessage,
 } from "@/chat/repository";
-import { saveAssistantTurn } from "@/chat/service/save-assistant-turn";
-import { getDb } from "@/db/client";
-import { buildTextStreamResponse } from "@/lib/response";
 
-type InboxChatRequest = z.infer<typeof InboxChatRequestSchema>;
-type ChatMessage = {
-  role: "system" | "user" | "assistant";
-  content: string;
-};
+import { 
+  evaluateConversationSafety,
+  buildSafetyPolicyPrompt,
+  getBoundaryReply,
+  isDirectBoundaryReply,
+  serializeConversationSafetyMetadata,
+  shouldInjectSafetyPolicy, } from "@/chat/service/evaluate-conversation-safety";
+import { saveAssistantTurn } from "@/chat/service/save-assistant-turn";
+import type {
+  BuildChatMessagesInput,
+  ChatCompletionMessage,
+} from "@/chat/types";
+import { getDb } from "@/db/client";
+import {
+  buildImmediateTextStream,
+  buildTextStreamResponse,
+} from "@/lib/response";
+import type { InboxChatRequest } from "@repo/contracts";
 
 function extractText(value: unknown): string {
   if (typeof value === "string") {
@@ -48,32 +57,6 @@ function extractText(value: unknown): string {
 
   return extractText(record.content);
 }
-
-type AgentPrompt = {
-  name: string;
-  headline: string | null;
-  description: string | null;
-  storyBackground: string | null;
-  personalityPrompt: string | null;
-  tonePrompt: string | null;
-  guardrailsPrompt: string | null;
-  defaultPrompt: string | null;
-};
-
-type ConversationPrompt = {
-  summary: string | null;
-};
-
-type MemoryPrompt = {
-  type: string;
-  content: string;
-  importance: number;
-};
-
-type HistoryMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
 
 function getLatestUserContent(payload: InboxChatRequest): string {
   for (let index = payload.messages.length - 1; index >= 0; index -= 1) {
@@ -100,15 +83,9 @@ function getLatestUserContent(payload: InboxChatRequest): string {
   );
 }
 
-function buildMessages(input: {
-  agent: AgentPrompt;
-  conversation: ConversationPrompt;
-  memories: MemoryPrompt[];
-  history: HistoryMessage[];
-  currentUserContent: string;
-}): ChatMessage[] {
+function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
   const { agent, conversation, memories, history, currentUserContent } = input;
-  const messages: ChatMessage[] = [
+  const messages: ChatCompletionMessage[] = [
     {
       role: "system",
       content: [
@@ -130,6 +107,7 @@ function buildMessages(input: {
             ].join("\n")
           : "",
         conversation.summary ? `此前对话摘要：${conversation.summary}` : "",
+        input.safetyPolicy ?? "",
       ]
         .filter(Boolean)
         .join("\n"),
@@ -137,10 +115,7 @@ function buildMessages(input: {
   ];
 
   for (const message of history) {
-    messages.push({
-      role: message.role,
-      content: message.content,
-    });
+    messages.push(message);
   }
 
   messages.push({ role: "user", content: currentUserContent });
@@ -238,6 +213,7 @@ function sseToTextReadableStream(
   });
 }
 
+
 export async function handleInboxChat(
   context: Context<{
     Bindings: ApiEnvBindings;
@@ -274,19 +250,10 @@ export async function handleInboxChat(
   if (agent === null) {
     throw agentNotFoundError();
   }
+
   const currentUserContent = getLatestUserContent(payload);
   const userMessageId = crypto.randomUUID();
   const userMessageAtMs = Date.now();
-
-  await saveUserMessage(db, {
-    id: userMessageId,
-    conversationId: conversation.id,
-    userId,
-    agentId,
-    content: currentUserContent,
-    nowMs: userMessageAtMs,
-  });
-
   const [memories, recentHistory] = await Promise.all([
     listActiveMemories(db, {
       userId,
@@ -297,7 +264,6 @@ export async function handleInboxChat(
       conversationId: conversation.id,
       userId,
       agentId,
-      excludeMessageId: userMessageId,
       limit: MESSAGE_PAGE_SIZE,
     }),
   ]);
@@ -309,6 +275,50 @@ export async function handleInboxChat(
     /\/+$/,
     "",
   );
+  const model = env.DEEPSEEK_MODEL ?? "deepseek-chat";
+  const safety = await evaluateConversationSafety(env, {
+    agentName: agent.name,
+    guardrailsPrompt: agent.guardrailsPrompt,
+    activeMemories: memories,
+    history: history.slice(-SAFETY_RECENT_MESSAGE_LIMIT),
+    currentUserContent,
+  });
+
+  await saveUserMessage(db, {
+    id: userMessageId,
+    conversationId: conversation.id,
+    userId,
+    agentId,
+    content: currentUserContent,
+    metadataJson: serializeConversationSafetyMetadata(safety),
+    nowMs: userMessageAtMs,
+  });
+
+  const saveCompletedAssistant = async (content: string) => {
+    await saveAssistantTurn(db, {
+      id: crypto.randomUUID(),
+      conversationId: conversation.id,
+      userId,
+      agentId,
+      userMessageId,
+      userContent: currentUserContent,
+      assistantContent: content,
+      previousSummary: conversation.summary,
+      recentMessages: history.slice(-SUMMARY_RECENT_MESSAGE_LIMIT),
+      allowMemoryExtraction: safety.allowMemoryExtraction,
+      nowMs: Date.now(),
+    });
+  };
+
+  if (isDirectBoundaryReply(safety)) {
+    return buildTextStreamResponse(
+      buildImmediateTextStream(
+        getBoundaryReply(safety.boundaryAction),
+        saveCompletedAssistant,
+      ),
+    );
+  }
+
   const upstreamResponse = await fetch(`${baseUrl}/chat/completions`, {
     method: "POST",
     headers: {
@@ -318,13 +328,16 @@ export async function handleInboxChat(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: env.DEEPSEEK_MODEL ?? "deepseek-chat",
+      model,
       messages: buildMessages({
         agent,
         conversation,
         memories,
         history,
         currentUserContent,
+        safetyPolicy: shouldInjectSafetyPolicy(safety)
+          ? buildSafetyPolicyPrompt(safety)
+          : undefined,
       }),
       stream: true,
     }),
@@ -349,19 +362,6 @@ export async function handleInboxChat(
   }
 
   return buildTextStreamResponse(
-    sseToTextReadableStream(upstreamResponse.body, async (content) => {
-      await saveAssistantTurn(db, {
-        id: crypto.randomUUID(),
-        conversationId: conversation.id,
-        userId,
-        agentId,
-        userMessageId,
-        userContent: currentUserContent,
-        assistantContent: content,
-        previousSummary: conversation.summary,
-        recentMessages: history.slice(-SUMMARY_RECENT_MESSAGE_LIMIT),
-        nowMs: Date.now(),
-      });
-    }),
+    sseToTextReadableStream(upstreamResponse.body, saveCompletedAssistant),
   );
 }

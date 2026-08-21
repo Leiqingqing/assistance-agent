@@ -1,29 +1,15 @@
 import type { Db } from "@/db/client";
-import {
-  findMemoryByContent,
-  persistAssistantTurn,
-} from "@/chat/repository";
-
-type TurnMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-type MemoryCandidate = {
-  type: string;
-  content: string;
-  importance: number;
-};
+import { findMemoryByContent, persistAssistantTurn } from "@/chat/repository";
+import type {
+  BuildRollingSummaryInput,
+  MemoryCandidate,
+  SaveAssistantTurnInput,
+} from "@/chat/types";
 
 const SUMMARY_MAX_LENGTH = 1600;
 const MEMORY_KEYWORD_PATTERN = /喜欢|不喜欢|希望|记住|不要|习惯/;
 
-function buildRollingSummary(input: {
-  previousSummary: string | null;
-  recentMessages: TurnMessage[];
-  userContent: string;
-  assistantContent: string;
-}): string {
+function buildRollingSummary(input: BuildRollingSummaryInput): string {
   return [
     input.previousSummary,
     ...input.recentMessages.map(
@@ -63,18 +49,7 @@ function extractMemoryCandidate(userContent: string): MemoryCandidate | null {
 
 export async function saveAssistantTurn(
   db: Db,
-  input: {
-    id: string;
-    conversationId: string;
-    userId: string;
-    agentId: string;
-    userMessageId: string;
-    userContent: string;
-    assistantContent: string;
-    previousSummary: string | null;
-    recentMessages: TurnMessage[];
-    nowMs: number;
-  },
+  input: SaveAssistantTurnInput,
 ): Promise<void> {
   const summary = buildRollingSummary({
     previousSummary: input.previousSummary,
@@ -82,7 +57,10 @@ export async function saveAssistantTurn(
     userContent: input.userContent,
     assistantContent: input.assistantContent,
   });
-  const memoryCandidate = extractMemoryCandidate(input.userContent);
+  const memoryCandidate =
+    input.allowMemoryExtraction === false
+      ? null
+      : extractMemoryCandidate(input.userContent);
   const duplicateMemory =
     memoryCandidate === null
       ? null

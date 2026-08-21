@@ -17,15 +17,14 @@ import {
   getAgentConversation,
   getEarlierAgentMessages,
   getInboxChatUrl,
-  type AgentCompanion,
-  type AgentConversation,
 } from "@/api/chat";
 import { readClientSession } from "@/auth/client-sessions";
 import { ChatComposer } from "./component/chat-composer";
 import { ChatLoadingBubble, ChatMessage } from "./component/chat-message";
 import { ScrollToBottomButton } from "./component/scroll-to-bottom-button";
+import { AgentCompanionListResponse, AgentConversationResponse } from "@repo/contracts";
 
-function toInitialMessages(conversation: AgentConversation): UIMessage[] {
+function toInitialMessages(conversation: AgentConversationResponse): UIMessage[] {
   if (conversation.messages.length > 0) {
     return conversation.messages.map((message) => ({
       id: message.id,
@@ -49,8 +48,8 @@ function LoadedChatPanel({
   agent,
   conversation,
 }: {
-  agent: AgentCompanion;
-  conversation: AgentConversation;
+  agent: AgentCompanionListResponse["agents"][number];
+  conversation: AgentConversationResponse;
 }) {
   const [input, setInput] = useState("");
   const [nextCursor, setNextCursor] = useState(conversation.nextCursor);
@@ -291,7 +290,7 @@ function LoadedChatPanel({
   );
 }
 
-export function ChatPanel({ agent }: { agent: AgentCompanion }) {
+export function ChatPanel({ agent }: { agent: AgentCompanionListResponse["agents"][number] }) {
   const conversationQuery = useQuery({
     queryKey: ["agent-conversation", agent.id],
     queryFn: () => getAgentConversation(agent.id),

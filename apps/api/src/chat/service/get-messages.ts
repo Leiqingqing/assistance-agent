@@ -1,24 +1,16 @@
-import {
-  AgentConversationResponseSchema,
-  type AgentConversationMessagesQuerySchema,
-} from "@repo/contracts/chat";
+import { AgentConversationResponseSchema } from "@repo/contracts/chat";
 import type { Context } from "hono";
-import type { z } from "zod";
 import type { ApiEnvBindings } from "/env";
 import type { AuthVariables } from "@/auth/require-user";
 import { MESSAGE_PAGE_SIZE } from "@/chat/constants";
-import {
-  agentNotFoundError,
-  conversationNotFoundError,
-} from "@/chat/errors";
+import { agentNotFoundError, conversationNotFoundError } from "@/chat/errors";
 import {
   doesUserOwnAgent,
   findConversation,
   listConversationMessages,
 } from "@/chat/repository";
+import type { MessagesQuery } from "@/chat/types";
 import { getDb } from "@/db/client";
-
-type MessagesQuery = z.infer<typeof AgentConversationMessagesQuerySchema>;
 
 export async function handleGetMessages(
   context: Context<{
