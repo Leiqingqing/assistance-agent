@@ -1,4 +1,10 @@
-import type { AgentConversationMessagesQuerySchema, ConversationIntent, ConversationSafety } from "@repo/contracts/chat";
+import type {
+  AgentConversationMessagesQuerySchema,
+  ConversationEmotion,
+  ConversationIntent,
+  ConversationSafety,
+  EmotionRoute,
+} from "@repo/contracts/chat";
 import type { z } from "zod";
 
 export type MessagesQuery = z.infer<
@@ -43,7 +49,9 @@ export type BuildChatMessagesInput = {
   history: ChatHistoryMessage[];
   currentUserContent: string;
   safety: ConversationSafety;
-  intent?: ConversationIntent;
+  intent: ConversationIntent;
+  emotion: ConversationEmotion;
+  emotionRoute: EmotionRoute;
 };
 
 export type MemoryCandidate = {

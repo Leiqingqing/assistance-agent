@@ -24,9 +24,19 @@ import {
   isDirectBoundaryReply,
   serializeConversationSafetyMetadata,
 } from "@/chat/service/evaluate-conversation-safety";
-import { CONVERSATION_INTENT_ANALYSIS_VERSION, getIntentSystemInstruction } from "@/chat/service/conversation-analysis/detect-intent";
-import { detectConversationIntent } from "@/chat/service/conversation-analysis/graph";
+import {
+  CONVERSATION_EMOTION_ANALYSIS_VERSION,
+} from "@/chat/service/conversation-analysis/detect-emotion";
+import {
+  CONVERSATION_INTENT_ANALYSIS_VERSION,
+  getIntentSystemInstruction,
+} from "@/chat/service/conversation-analysis/detect-intent";
+import { analyzeConversation } from "@/chat/service/conversation-analysis/graph";
 import { mergeConversationMetadata } from "@/chat/service/conversation-analysis/metadata";
+import {
+  EMOTION_ROUTE_VERSION,
+  getEmotionSystemInstruction,
+} from "@/chat/service/conversation-analysis/route-emotion";
 import { saveAssistantTurn } from "@/chat/service/save-assistant-turn";
 import type {
   BuildChatMessagesInput,
@@ -87,7 +97,17 @@ function getLatestUserContent(payload: InboxChatRequest): string {
 }
 
 function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
-  const { agent, conversation, memories, history, currentUserContent, intent, safety } = input;
+  const {
+    agent,
+    conversation,
+    memories,
+    history,
+    currentUserContent,
+    intent,
+    emotion,
+    emotionRoute,
+    safety,
+  } = input;
   const messages: ChatCompletionMessage[] = [
     {
       role: "system",
@@ -101,7 +121,8 @@ function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
         agent.tonePrompt ? `表达语气：${agent.tonePrompt}` : "",
         agent.guardrailsPrompt ? `行为边界：${agent.guardrailsPrompt}` : "",
         getSafetySystemInstruction(safety),
-        getIntentSystemInstruction(intent??null),
+        getIntentSystemInstruction(intent),
+        getEmotionSystemInstruction(emotion, emotionRoute),
         memories.length > 0
           ? [
               "以下是用户与该 Agent 的长期记忆，请优先尊重：",
@@ -325,14 +346,16 @@ export async function handleInboxChat(
     );
   }
 
-  const intent = await detectConversationIntent(env, {
+  const analysis = await analyzeConversation(env, {
     agentName: agent.name,
     agentGuardrails: agent.guardrailsPrompt,
     safety,
     activeMemories: memories,
     recentMessages: history,
+    messageCount: conversation.messageCount,
     userText: currentUserContent,
   });
+  const { intent, emotion, emotionRoute } = analysis;
 
   await saveUserMessage(db, {
     id: userMessageId,
@@ -343,6 +366,10 @@ export async function handleInboxChat(
     metadataJson: mergeConversationMetadata(safetyMetadataJson, {
       intentAnalysisVersion: CONVERSATION_INTENT_ANALYSIS_VERSION,
       intent,
+      emotionAnalysisVersion: CONVERSATION_EMOTION_ANALYSIS_VERSION,
+      emotion,
+      emotionRouteVersion: EMOTION_ROUTE_VERSION,
+      emotionRoute,
     }),
     nowMs: userMessageAtMs,
   });
@@ -364,7 +391,9 @@ export async function handleInboxChat(
         history,
         currentUserContent,
         safety,
-        intent
+        intent,
+        emotion,
+        emotionRoute,
       }),
       stream: true,
     }),

@@ -1,6 +1,9 @@
 import type {
+  ConversationEmotion,
   ConversationIntent,
+  ConversationRelationshipStage,
   ConversationSafety,
+  EmotionRoute,
 } from "@repo/contracts/chat";
 import { Annotation } from "@langchain/langgraph";
 
@@ -12,9 +15,13 @@ export const ConversationAnalysisState = Annotation.Root({
   safety: Annotation<ConversationSafety>(),
   activeMemories: Annotation<ChatMemory[]>(),
   recentMessages: Annotation<ChatHistoryMessage[]>(),
+  messageCount: Annotation<number>(),
   userText: Annotation<string>(),
   normalizedInput: Annotation<string>(),
   intent: Annotation<ConversationIntent | null>(),
+  emotion: Annotation<ConversationEmotion | null>(),
+  relationshipStage: Annotation<ConversationRelationshipStage | null>(),
+  emotionRoute: Annotation<EmotionRoute | null>(),
 });
 
 export type ConversationAnalysisGraphState =
@@ -26,5 +33,6 @@ export type DetectConversationIntentInput = {
   safety: ConversationSafety;
   activeMemories: ChatMemory[];
   recentMessages: ChatHistoryMessage[];
+  messageCount: number;
   userText: string;
 };
