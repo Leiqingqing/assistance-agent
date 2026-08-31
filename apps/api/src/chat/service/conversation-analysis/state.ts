@@ -4,6 +4,7 @@ import type {
   ConversationRelationshipStage,
   ConversationSafety,
   EmotionRoute,
+  ReplyPolicy,
 } from "@repo/contracts/chat";
 import { Annotation } from "@langchain/langgraph";
 
@@ -22,6 +23,7 @@ export const ConversationAnalysisState = Annotation.Root({
   emotion: Annotation<ConversationEmotion | null>(),
   relationshipStage: Annotation<ConversationRelationshipStage | null>(),
   emotionRoute: Annotation<EmotionRoute | null>(),
+  replyPolicy: Annotation<ReplyPolicy | null>(),
 });
 
 export type ConversationAnalysisGraphState =

@@ -37,6 +37,14 @@ import {
   EMOTION_ROUTE_VERSION,
   getEmotionSystemInstruction,
 } from "@/chat/service/conversation-analysis/route-emotion";
+import {
+  REPLY_POLICY_VERSION,
+  getReplyPolicySystemInstruction,
+} from "@/chat/service/conversation-analysis/reply-policy";
+import {
+  evaluateReplyQuality,
+  serializeReplyQualityMetadata,
+} from "@/chat/service/evaluate-reply-quality";
 import { saveAssistantTurn } from "@/chat/service/save-assistant-turn";
 import type {
   BuildChatMessagesInput,
@@ -47,7 +55,7 @@ import {
   buildImmediateTextStream,
   buildTextStreamResponse,
 } from "@/lib/response";
-import type { InboxChatRequest } from "@repo/contracts";
+import type { InboxChatRequest, ReplyPolicy } from "@repo/contracts";
 
 function extractText(value: unknown): string {
   if (typeof value === "string") {
@@ -106,6 +114,7 @@ function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
     intent,
     emotion,
     emotionRoute,
+    replyPolicy,
     safety,
   } = input;
   const messages: ChatCompletionMessage[] = [
@@ -123,6 +132,7 @@ function buildMessages(input: BuildChatMessagesInput): ChatCompletionMessage[] {
         getSafetySystemInstruction(safety),
         getIntentSystemInstruction(intent),
         getEmotionSystemInstruction(emotion, emotionRoute),
+        getReplyPolicySystemInstruction(replyPolicy),
         memories.length > 0
           ? [
               "以下是用户与该 Agent 的长期记忆，请优先尊重：",
@@ -311,7 +321,20 @@ export async function handleInboxChat(
   });
   const safetyMetadataJson = serializeConversationSafetyMetadata(safety);
 
-  const saveCompletedAssistant = async (content: string) => {
+  const saveCompletedAssistant = async (
+    content: string,
+    replyPolicyForQuality?: ReplyPolicy | null,
+  ) => {
+    const metadataJson = replyPolicyForQuality
+      ? serializeReplyQualityMetadata({
+          replyPolicy: replyPolicyForQuality,
+          replyQuality: evaluateReplyQuality({
+            text: content,
+            policy: replyPolicyForQuality,
+          }),
+        })
+      : null;
+
     await saveAssistantTurn(db, {
       id: crypto.randomUUID(),
       conversationId: conversation.id,
@@ -323,6 +346,7 @@ export async function handleInboxChat(
       previousSummary: conversation.summary,
       recentMessages: history.slice(-SUMMARY_RECENT_MESSAGE_LIMIT),
       allowMemoryExtraction: safety.allowMemoryExtraction,
+      metadataJson,
       nowMs: Date.now(),
     });
   };
@@ -355,7 +379,7 @@ export async function handleInboxChat(
     messageCount: conversation.messageCount,
     userText: currentUserContent,
   });
-  const { intent, emotion, emotionRoute } = analysis;
+  const { intent, emotion, emotionRoute, replyPolicy } = analysis;
 
   await saveUserMessage(db, {
     id: userMessageId,
@@ -370,6 +394,8 @@ export async function handleInboxChat(
       emotion,
       emotionRouteVersion: EMOTION_ROUTE_VERSION,
       emotionRoute,
+      replyPolicyVersion: REPLY_POLICY_VERSION,
+      replyPolicy,
     }),
     nowMs: userMessageAtMs,
   });
@@ -394,6 +420,7 @@ export async function handleInboxChat(
         intent,
         emotion,
         emotionRoute,
+        replyPolicy,
       }),
       stream: true,
     }),
@@ -418,6 +445,8 @@ export async function handleInboxChat(
   }
 
   return buildTextStreamResponse(
-    sseToTextReadableStream(upstreamResponse.body, saveCompletedAssistant),
+    sseToTextReadableStream(upstreamResponse.body, (content) =>
+      saveCompletedAssistant(content, replyPolicy),
+    ),
   );
 }

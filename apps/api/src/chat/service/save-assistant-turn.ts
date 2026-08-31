@@ -86,6 +86,7 @@ export async function saveAssistantTurn(
     assistantContent: input.assistantContent,
     summary,
     memory,
+    metadataJson: input.metadataJson,
     nowMs: input.nowMs,
   });
 }

@@ -307,6 +307,7 @@ export async function persistAssistantTurn(
       importance: number;
       sourceMessageId: string;
     } | null;
+    metadataJson?: string | null;
     nowMs: number;
   },
 ): Promise<void> {
@@ -318,6 +319,7 @@ export async function persistAssistantTurn(
     role: "assistant",
     content: input.assistantContent,
     status: "completed",
+    metadataJson: input.metadataJson ?? null,
     createdAtMs: input.nowMs,
   });
   const conversationUpdate = db

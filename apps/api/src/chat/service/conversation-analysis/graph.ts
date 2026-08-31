@@ -14,6 +14,10 @@ import {
   routeEmotionNode,
 } from "./route-emotion";
 import {
+  FALLBACK_REPLY_POLICY,
+  buildReplyPolicyNode,
+} from "./reply-policy";
+import {
   ConversationAnalysisState,
   type ConversationAnalysisGraphState,
   type DetectConversationIntentInput,
@@ -42,12 +46,14 @@ export function compileConversationAnalysisGraph(env: ParsedApiEnvBindings) {
     .addNode("detect_conversation_emotion", createDetectEmotionNode(env))
     // .addNode("build_relationship_stage", relationshipStageNode)
     .addNode("route_conversation_emotion", routeEmotionNode)
+    .addNode("build_reply_policy", buildReplyPolicyNode)
     .addEdge(START, "normalize_user_input")
     .addEdge("normalize_user_input", "detect_conversation_intent")
     .addEdge("detect_conversation_intent", "detect_conversation_emotion")
     // .addEdge("detect_conversation_emotion", "build_relationship_stage")
     .addEdge("detect_conversation_emotion", "route_conversation_emotion")
-    .addEdge("route_conversation_emotion", END)
+    .addEdge("route_conversation_emotion", "build_reply_policy")
+    .addEdge("build_reply_policy", END)
     .compile();
 }
 
@@ -63,6 +69,7 @@ export async function analyzeConversation(
     emotion: null,
     relationshipStage: null,
     emotionRoute: null,
+    replyPolicy: null,
   });
 
   const intent = result.intent ?? FALLBACK_CONVERSATION_INTENT;
@@ -72,12 +79,14 @@ export async function analyzeConversation(
   const emotionRoute =
     result.emotionRoute ??
     FALLBACK_EMOTION_ROUTE;
+  const replyPolicy = result.replyPolicy ?? FALLBACK_REPLY_POLICY;
 
   return {
     intent,
     emotion,
     relationshipStage,
     emotionRoute,
+    replyPolicy,
   };
 }
 

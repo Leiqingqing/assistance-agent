@@ -4,6 +4,7 @@ import type {
   ConversationIntent,
   ConversationSafety,
   EmotionRoute,
+  ReplyPolicy,
 } from "@repo/contracts/chat";
 import type { z } from "zod";
 
@@ -52,6 +53,7 @@ export type BuildChatMessagesInput = {
   intent: ConversationIntent;
   emotion: ConversationEmotion;
   emotionRoute: EmotionRoute;
+  replyPolicy: ReplyPolicy;
 };
 
 export type MemoryCandidate = {
@@ -78,6 +80,7 @@ export type SaveAssistantTurnInput = {
   previousSummary: string | null;
   recentMessages: ChatHistoryMessage[];
   allowMemoryExtraction?: boolean;
+  metadataJson?: string | null;
   nowMs: number;
 };
 
