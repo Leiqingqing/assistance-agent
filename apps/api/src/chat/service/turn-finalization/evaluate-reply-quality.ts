@@ -4,7 +4,7 @@ import {
   type ReplyQualityGuard,
 } from "@repo/contracts/chat";
 
-import { REPLY_POLICY_VERSION } from "@/chat/service/conversation-analysis/reply-policy";
+import { REPLY_POLICY_VERSION } from "@/chat/service/turn-planning/policies/reply-policy";
 
 export const REPLY_QUALITY_GUARD_VERSION = "reply-quality-v1";
 

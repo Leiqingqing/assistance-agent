@@ -99,14 +99,3 @@ export type ConversationSafetyPromptInput = {
   recentMessages: string;
   userText: string;
 };
-
-export type StructuredOutputMethod =
-  | "jsonSchema"
-  | "functionCalling"
-  | "jsonMode";
-
-export type StructuredOutputStrategy = {
-  id: string;
-  method: StructuredOutputMethod;
-  useResponsesApi: boolean;
-};

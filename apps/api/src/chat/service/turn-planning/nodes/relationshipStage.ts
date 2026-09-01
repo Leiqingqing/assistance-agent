@@ -1,6 +1,6 @@
 import { ConversationRelationshipStageSchema, type ConversationEmotion, type ConversationIntent, type ConversationRelationshipStage, type ConversationSafety } from "@repo/contracts";
 import type { ChatMemory } from "@/chat/types";
-import type { ConversationAnalysisGraphState } from "./state";
+import type { ConversationAnalysisGraphState } from "../state";
 
 function uniquePolicyMoves<T extends string>(moves: T[], limit: number) {
     return Array.from(new Set(moves)).slice(0, limit)

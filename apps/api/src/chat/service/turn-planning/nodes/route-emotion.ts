@@ -7,7 +7,7 @@ import {
   type EmotionRoute,
 } from "@repo/contracts/chat";
 
-import type { ConversationAnalysisState } from "@/chat/service/conversation-analysis/state";
+import type { ConversationAnalysisState } from "@/chat/service/turn-planning/state";
 import { FALLBACK_CONVERSATION_EMOTION } from "./detect-emotion";
 
 export const EMOTION_ROUTE_VERSION = "emotion-route-v1";

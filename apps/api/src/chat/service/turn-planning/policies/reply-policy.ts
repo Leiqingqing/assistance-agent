@@ -8,7 +8,7 @@ import {
   type ReplyPolicy,
 } from "@repo/contracts/chat";
 
-import type { ConversationAnalysisState } from "@/chat/service/conversation-analysis/state";
+import type { ConversationAnalysisState } from "@/chat/service/turn-planning/state";
 
 export const REPLY_POLICY_VERSION = "reply-policy-v1";
 
