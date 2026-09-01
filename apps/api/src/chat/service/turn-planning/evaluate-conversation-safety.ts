@@ -1,7 +1,4 @@
-import {
-  ConversationSafetySchema,
-  type ConversationSafety,
-} from "@repo/contracts/chat";
+
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { ChatOpenAI } from "@langchain/openai";
 
@@ -19,6 +16,7 @@ import type {
   ConversationSafetyPromptInput,
   EvaluateConversationSafetyInput,
 } from "@/chat/types";
+import { ConversationSafetySchema, type ConversationSafety } from "@/chat/schema/conversationSafety";
 
 const CONVERSATION_SAFETY_ANALYSIS_VERSION = "conversation-safety-v1";
 

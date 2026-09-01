@@ -3,11 +3,7 @@ import type { Context } from "hono";
 
 import { getApiEnv, type ApiEnvBindings } from "/env";
 import type { AuthVariables } from "@/auth/require-user";
-import {
-  MEMORY_INJECTION_LIMIT,
-  MESSAGE_PAGE_SIZE,
-  SUMMARY_RECENT_MESSAGE_LIMIT,
-} from "@/chat/constants";
+
 import { agentNotFoundError, conversationNotFoundError } from "@/chat/errors";
 import {
   findOwnedAgent,
@@ -24,6 +20,7 @@ import { finalizeTurn } from "@/chat/service/turn-finalization/finalize-turn";
 import { planTurn } from "@/chat/service/turn-planning/plan-turn";
 import { getDb } from "@/db/client";
 import type { InboxChatRequest } from "@repo/contracts";
+import { MEMORY_INJECTION_LIMIT, MESSAGE_PAGE_SIZE, SUMMARY_RECENT_MESSAGE_LIMIT } from "../constants";
 
 function extractText(value: unknown): string {
   if (typeof value === "string") {
@@ -142,11 +139,13 @@ export async function handleInboxChat(
   const saveCompletedAssistant = (content: string) =>
     finalizeTurn({
       db,
+      env,
       id: crypto.randomUUID(),
       conversationId: conversation.id,
       userId,
       agentId,
       userMessageId,
+      activeMemories: memories,
       userContent: currentUserContent,
       assistantContent: content,
       previousSummary: conversation.summary,

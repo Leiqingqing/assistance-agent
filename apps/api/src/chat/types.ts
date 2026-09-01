@@ -1,16 +1,9 @@
-import type {
-  AgentConversationMessagesQuerySchema,
-  ConversationEmotion,
-  ConversationIntent,
-  ConversationSafety,
-  EmotionRoute,
-  ReplyPolicy,
-} from "@repo/contracts/chat";
-import type { z } from "zod";
+   
+import type { ConversationSafety } from "./schema/conversationSafety";
+import type { ConversationIntent } from "./schema/intent";
+import type { ConversationEmotion, EmotionRoute } from "./schema/emotion";
+import type { ReplyPolicy } from "./schema/reply";
 
-export type MessagesQuery = z.infer<
-  typeof AgentConversationMessagesQuerySchema
->;
 
 export type ChatCompletionMessage = {
   role: "system" | "user" | "assistant";

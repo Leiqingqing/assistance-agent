@@ -1,6 +1,9 @@
-import { ConversationRelationshipStageSchema, type ConversationEmotion, type ConversationIntent, type ConversationRelationshipStage, type ConversationSafety } from "@repo/contracts";
 import type { ChatMemory } from "@/chat/types";
 import type { ConversationAnalysisGraphState } from "../state";
+import { ConversationRelationshipStageSchema, type ConversationRelationshipStage } from "@/chat/schema/relationship";
+import type { ConversationSafety } from "@/chat/schema/conversationSafety";
+import type { ConversationIntent } from "@/chat/schema/intent";
+import type { ConversationEmotion } from "@/chat/schema/emotion";
 
 function uniquePolicyMoves<T extends string>(moves: T[], limit: number) {
     return Array.from(new Set(moves)).slice(0, limit)

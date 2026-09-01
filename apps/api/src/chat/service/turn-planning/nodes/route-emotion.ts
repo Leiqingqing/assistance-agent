@@ -1,14 +1,14 @@
 import {
   EmotionRouteSchema,
   type ConversationEmotion,
-  type ConversationIntent,
-  type ConversationRelationshipStage,
-  type ConversationSafety,
   type EmotionRoute,
-} from "@repo/contracts/chat";
+} from "@/chat/schema/emotion";
 
 import type { ConversationAnalysisState } from "@/chat/service/turn-planning/state";
 import { FALLBACK_CONVERSATION_EMOTION } from "./detect-emotion";
+import type { ConversationSafety } from "@/chat/schema/conversationSafety";
+import type { ConversationIntent } from "@/chat/schema/intent";
+import type { ConversationRelationshipStage } from "@/chat/schema/relationship";
 
 export const EMOTION_ROUTE_VERSION = "emotion-route-v1";
 

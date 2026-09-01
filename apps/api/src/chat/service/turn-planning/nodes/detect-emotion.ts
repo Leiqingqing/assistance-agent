@@ -1,8 +1,4 @@
-import {
-  ConversationEmotionSchema,
-  type ConversationEmotion,
-  type ConversationSafety,
-} from "@repo/contracts/chat";
+
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -18,6 +14,8 @@ import {
   type StructuredOutputMethod,
 } from "@/ai/structured-output";
 import type { ConversationAnalysisGraphState } from "@/chat/service/turn-planning/state";
+import { ConversationEmotionSchema, type ConversationEmotion } from "@/chat/schema/emotion";
+import type { ConversationSafety } from "@/chat/schema/conversationSafety";
 
 export const CONVERSATION_EMOTION_ANALYSIS_VERSION = "conversation-emotion-v1";
 

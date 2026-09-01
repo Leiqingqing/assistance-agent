@@ -1,14 +1,13 @@
-import {
-  ReplyPolicySchema,
-  type ConversationEmotion,
-  type ConversationIntent,
-  type ConversationRelationshipStage,
-  type ConversationSafety,
-  type EmotionRoute,
-  type ReplyPolicy,
-} from "@repo/contracts/chat";
+    import {
+      ReplyPolicySchema,
+      type ReplyPolicy,
+    } from "@/chat/schema/reply";
+import type { ConversationEmotion, EmotionRoute } from "@/chat/schema/emotion";
 
 import type { ConversationAnalysisState } from "@/chat/service/turn-planning/state";
+import type { ConversationIntent } from "@/chat/schema/intent";
+import type { ConversationRelationshipStage } from "@/chat/schema/relationship";
+import type { ConversationSafety } from "@/chat/schema/conversationSafety";
 
 export const REPLY_POLICY_VERSION = "reply-policy-v1";
 

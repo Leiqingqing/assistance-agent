@@ -300,13 +300,13 @@ export async function persistAssistantTurn(
     agentId: string;
     assistantContent: string;
     summary: string;
-    memory: {
+    memories: Array<{
       id: string;
       type: string;
       content: string;
       importance: number;
       sourceMessageId: string;
-    } | null;
+    }>;
     metadataJson?: string | null;
     nowMs: number;
   },
@@ -351,26 +351,30 @@ export async function persistAssistantTurn(
       ),
     );
 
-  if (input.memory === null) {
+  if (input.memories.length === 0) {
     await db.batch([assistantInsert, conversationUpdate, companionUpdate]);
     return;
   }
+
+  const memoryInserts = input.memories.map((memory) =>
+    db.insert(agentMemories).values({
+      id: memory.id,
+      userId: input.userId,
+      agentId: input.agentId,
+      type: memory.type,
+      content: memory.content,
+      importance: memory.importance,
+      status: "active",
+      sourceMessageId: memory.sourceMessageId,
+      createdAtMs: input.nowMs,
+      updatedAtMs: input.nowMs,
+    }),
+  );
 
   await db.batch([
     assistantInsert,
     conversationUpdate,
     companionUpdate,
-    db.insert(agentMemories).values({
-      id: input.memory.id,
-      userId: input.userId,
-      agentId: input.agentId,
-      type: input.memory.type,
-      content: input.memory.content,
-      importance: input.memory.importance,
-      status: "active",
-      sourceMessageId: input.memory.sourceMessageId,
-      createdAtMs: input.nowMs,
-      updatedAtMs: input.nowMs,
-    }),
+    ...memoryInserts,
   ]);
 }

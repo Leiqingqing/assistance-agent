@@ -1,9 +1,4 @@
-import {
-  CompanionIntentPrimarySchema,
-  ConversationIntentSchema,
-  type ConversationIntent,
-  type ConversationSafety,
-} from "@repo/contracts/chat";
+
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import type { ChatOpenAI } from "@langchain/openai";
 import { z } from "zod";
@@ -19,6 +14,8 @@ import {
   type StructuredOutputMethod,
 } from "@/ai/structured-output";
 import type { ConversationAnalysisGraphState } from "@/chat/service/turn-planning/state";
+import { CompanionIntentPrimarySchema, ConversationIntentSchema, type ConversationIntent } from "@/chat/schema/intent";
+import type { ConversationSafety } from "@/chat/schema/conversationSafety";
 
 export const CONVERSATION_INTENT_ANALYSIS_VERSION = "conversation-intent-v1";
 
