@@ -9,6 +9,7 @@
     "./catalog": "./src/catalog/index.ts",
     "./chat": "./src/chat/index.ts",
     "./common": "./src/common/index.ts",
+    "./group-chat": "./src/group-chat/index.ts",
     "./memory": "./src/memory/index.ts",
     "./order": "./src/order/index.ts",
     "./role": "./src/role/index.ts",

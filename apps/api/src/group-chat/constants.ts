@@ -1,0 +1,1 @@
+export const GROUP_CHAT_MESSAGE_PAGE_SIZE = 40;

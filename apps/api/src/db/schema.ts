@@ -129,6 +129,66 @@ export const userAgentCompanions = sqliteTable(
   ],
 );
 
+export const agentGroupChats = sqliteTable("agent_group_chats", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  summary: text("summary"),
+  messageCount: integer("message_count").notNull(),
+  lastMessageAtMs: integer("last_message_at_ms"),
+  createdAtMs: integer("created_at_ms").notNull(),
+  updatedAtMs: integer("updated_at_ms").notNull(),
+});
+
+export const agentGroupChatMembers = sqliteTable(
+  "agent_group_chat_members",
+  {
+    id: text("id").primaryKey(),
+    groupChatId: text("group_chat_id")
+      .notNull()
+      .references(() => agentGroupChats.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    agentId: text("agent_id")
+      .notNull()
+      .references(() => userAgentCompanions.id, { onDelete: "cascade" }),
+    displayOrder: integer("display_order").notNull(),
+    status: text("status", { enum: ["active", "removed"] }).notNull(),
+    joinedAtMs: integer("joined_at_ms").notNull(),
+    removedAtMs: integer("removed_at_ms"),
+  },
+  (table) => [
+    uniqueIndex("idx_agent_group_chat_members_chat_agent_unique").on(
+      table.groupChatId,
+      table.agentId,
+    ),
+  ],
+);
+
+export const agentGroupChatMessages = sqliteTable("agent_group_chat_messages", {
+  id: text("id").primaryKey(),
+  groupChatId: text("group_chat_id")
+    .notNull()
+    .references(() => agentGroupChats.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  senderType: text("sender_type", {
+    enum: ["user", "agent", "system"],
+  }).notNull(),
+  agentId: text("agent_id").references(() => userAgentCompanions.id, {
+    onDelete: "set null",
+  }),
+  content: text("content").notNull(),
+  status: text("status", { enum: ["completed", "failed"] }).notNull(),
+  turnIndex: integer("turn_index").notNull(),
+  metadataJson: text("metadata_json"),
+  createdAtMs: integer("created_at_ms").notNull(),
+});
+
 export const agentConversations = sqliteTable(
   "agent_conversations",
   {
