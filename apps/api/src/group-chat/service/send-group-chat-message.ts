@@ -174,7 +174,9 @@ export async function handleSendGroupChatMessage(
     timeout: 30_000,
     maxRetries: 1,
   });
-  const result = await model.invoke(modelMessages);
+  const requestSignal = context.req.raw.signal;
+  const result = await model.invoke(modelMessages, { signal: requestSignal });
+  requestSignal.throwIfAborted();
   const agentContent = extractText(result.content).trim();
 
   if (!agentContent) {

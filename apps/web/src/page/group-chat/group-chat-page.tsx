@@ -8,7 +8,6 @@ import { Badge } from "@repo/ui/badge";
 import { Button } from "@repo/ui/button";
 import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowLeft,
   LoaderCircle,
@@ -19,10 +18,13 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { listAgentCompanions } from "@/api/chat";
-import { createGroupChat, listGroupChats } from "@/api/group-chat";
 import { CreateGroupChatDialog } from "./component/create-group-chat-dialog";
 import { GroupChatCard } from "./component/group-chat-card";
+import {
+  useAvailableGroupChatAgentsQuery,
+  useCreateGroupChatMutation,
+  useGroupChatsQuery,
+} from "./hooks/use-group-chat";
 
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "操作失败，请稍后重试。";
@@ -30,32 +32,11 @@ function getErrorMessage(error: unknown): string {
 
 export default function GroupChatPage() {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [query, setQuery] = useState("");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const groupChatsQuery = useQuery({
-    queryKey: ["group-chats"],
-    queryFn: listGroupChats,
-  });
-  const agentsQuery = useQuery({
-    queryKey: ["agent-companions"],
-    queryFn: listAgentCompanions,
-  });
-  const createMutation = useMutation({
-    mutationFn: (request: CreateAgentGroupChatRequest) =>
-      createGroupChat(request),
-    onSuccess: (groupChat) => {
-      queryClient.setQueryData(
-        ["group-chats"],
-        (current: Awaited<ReturnType<typeof listGroupChats>> | undefined) => [
-          groupChat,
-          ...(current ?? []).filter((item) => item.id !== groupChat.id),
-        ],
-      );
-      setShowCreateDialog(false);
-      router.push(`/group-chat/${encodeURIComponent(groupChat.id)}`);
-    },
-  });
+  const groupChatsQuery = useGroupChatsQuery();
+  const agentsQuery = useAvailableGroupChatAgentsQuery();
+  const createMutation = useCreateGroupChatMutation();
   const groupChats = useMemo(
     () => groupChatsQuery.data ?? [],
     [groupChatsQuery.data],
@@ -85,7 +66,9 @@ export default function GroupChatPage() {
   ).size;
 
   async function submitCreateGroupChat(request: CreateAgentGroupChatRequest) {
-    await createMutation.mutateAsync(request);
+    const groupChat = await createMutation.mutateAsync(request);
+    setShowCreateDialog(false);
+    router.push(`/group-chat/${encodeURIComponent(groupChat.id)}`);
   }
 
   function openCreateDialog() {
