@@ -1,22 +1,28 @@
 "use client";
 
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { Button } from "@repo/ui/button";
 import { Textarea } from "@repo/ui/textarea";
-import { CircleStop, SendHorizontal } from "lucide-react";
+import { CircleStop, LoaderCircle, SendHorizontal } from "lucide-react";
 
 export function ChatComposer({
+  canStop = true,
+  disclaimer = "AI 生成内容可能有误，请在发送给客户前核对。",
   input,
   isRunning,
   onInputChange,
   onStop,
   onSubmit,
+  placeholder = "输入消息，Enter 发送，Shift + Enter 换行",
 }: {
+  canStop?: boolean;
+  disclaimer?: ReactNode;
   input: string;
   isRunning: boolean;
   onInputChange: (value: string) => void;
   onStop: () => void;
   onSubmit: () => void;
+  placeholder?: string;
 }) {
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -40,20 +46,25 @@ export function ChatComposer({
               onSubmit();
             }
           }}
-          placeholder="输入消息，Enter 发送，Shift + Enter 换行"
+          placeholder={placeholder}
           rows={1}
           value={input}
         />
         {isRunning ? (
           <Button
-            aria-label="停止生成"
+            aria-label={canStop ? "停止生成" : "正在等待回复"}
             className="shrink-0 rounded-xl"
+            disabled={!canStop}
             onClick={onStop}
             size="icon"
             type="button"
             variant="outline"
           >
-            <CircleStop className="size-4" />
+            {canStop ? (
+              <CircleStop className="size-4" />
+            ) : (
+              <LoaderCircle className="size-4 animate-spin" />
+            )}
           </Button>
         ) : (
           <Button
@@ -67,9 +78,11 @@ export function ChatComposer({
           </Button>
         )}
       </form>
-      <p className="mx-auto mt-2 max-w-4xl text-center text-caption text-muted-foreground">
-        AI 生成内容可能有误，请在发送给客户前核对。
-      </p>
+      {disclaimer ? (
+        <p className="mx-auto mt-2 max-w-4xl text-center text-caption text-muted-foreground">
+          {disclaimer}
+        </p>
+      ) : null}
     </footer>
   );
 }

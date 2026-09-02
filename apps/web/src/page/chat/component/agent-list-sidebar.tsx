@@ -9,7 +9,7 @@ import { Input } from "@repo/ui/input";
 import { Label } from "@repo/ui/label";
 import { ScrollArea } from "@repo/ui/scroll-area";
 import { Separator } from "@repo/ui/separator";
-import { Bot, Brain, Search, Sparkles } from "lucide-react";
+import { Bot, Brain, MessagesSquare, Search, Sparkles } from "lucide-react";
 import { AgentCompanion } from "@repo/contracts";
 
 function formatLastMessageTime(value: number | null): string {
@@ -119,6 +119,17 @@ export function AgentSidebar({
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="secondary">{agents.length} 位</Badge>
+            <Button
+              aria-label="进入群聊"
+              asChild
+              className="rounded-xl"
+              size="icon"
+              variant="ghost"
+            >
+              <Link href="/group-chat" title="进入群聊">
+                <MessagesSquare className="size-4" />
+              </Link>
+            </Button>
             <Button
               aria-label="管理记忆"
               asChild

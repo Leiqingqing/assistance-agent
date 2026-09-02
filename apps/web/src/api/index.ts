@@ -4,4 +4,5 @@ export * from "./catalog";
 export * from "./user";
 export * from "./order";
 export * from "./chat";
+export * from "./group-chat";
 export * from "./memory";

@@ -4,18 +4,17 @@ import {
   AgentConversationResponse,
   AgentConversationResponseSchema,
 } from "@repo/contracts/chat";
-import type { z } from "zod";
 import { getApiBaseUrlEnv } from "@env";
 import { http } from "@/auth/http";
-
-
 
 export function getInboxChatUrl() {
   const baseUrl = getApiBaseUrlEnv(process.env.NEXT_PUBLIC_API_BASE_URL);
   return new URL("/chat/inbox", baseUrl).toString();
 }
 
-export async function listAgentCompanions(): Promise<AgentCompanionListResponse["agents"]> {
+export async function listAgentCompanions(): Promise<
+  AgentCompanionListResponse["agents"]
+> {
   const result = await http.get<unknown>("/rpc/chat/inbox");
   return AgentCompanionListResponseSchema.parse(result).agents;
 }
